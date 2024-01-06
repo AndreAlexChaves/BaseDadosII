@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <title>Encomendar Componentes</title>
+    <style>
+        .container {
+            padding-top: 20px;
+        }
+        .componente-item {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+{% include 'navbar.html' %}
+
+<div style="margin-left: 32px; margin-right: 32px; margin-top: 32px; text-align: -webkit-center;">
+    <h1>Encomendar Componentes</h1>
+    <form method="GET" action="">
+        <select class="form-control col-6" id="fornecedor-dropdown" style="margin-top: 32px;" aria-label="Default select example" name="fornecedor" onchange="this.form.submit()">
+            <option value="">Selecione o Fornecedor</option>
+            {% for fornecedor in fornecedores %}
+                <option value="{{ fornecedor.0 }}">{{ fornecedor.1 }}</option>
+            {% endfor %}
+        </select>
+    </form>
+<br>
+    <div id="resultados" class="col-6">
+        {% if componentes %}
+            <h3>Componentes do Fornecedor</h3>
+            <ul id="componentes-list" style="list-style-type: none; padding: 0; text-align: center;">
+                {% for componente in componentes %}
+                    <li class="componente-item">
+                        <br>
+                        <div class="form-group" style="text-align: left;">
+                            <label for="preco">{{ componente.2 }}</label>
+                            <input type="number" class="mt-1 form-control" id="preco_{{ componente.0 }}" placeholder="Preço por Unidade">
+                            <input type="number" class="mt-2 form-control" id="quantidade_{{ componente.0 }}" placeholder="Quantidade">
+                        </div>
+                        <button class="btn btn-dark adicionar mt-3 mb-4" 
+                                data-id="{{ componente.0 }}" 
+                                data-nome="{{ componente.2 }}"
+                                data-fornecedor="{{ componente.3 }}" style="width: 50%;">
+                            Adicionar
+                        </button>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Selecione um fornecedor para ver os componentes.</p>
+        {% endif %}
+    </div>
+    <h3>Componentes a Comprar: </h3>
+    <div class="mb-3">
+        <ul id="componentes-compra-list"></ul>
+        <form method="post" action="{% url 'realizarEncomendaCompra' %}">
+            {% csrf_token %}
+            <!-- Adicione um campo oculto para enviar os dados da lista de componentes -->
+            <input type="hidden" name="componentes" id="componentes-input" value="">
+            <div style="margin-bottom: 32px;">
+                <button type="submit" class="btn btn-success" id="comprar-btn" style="width: 50%;">Comprar</button>
+            </div>  
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var fornecedor = urlParams.get('fornecedor', '');
+        $('#fornecedor-dropdown').val(fornecedor);
+        
+        const componentesCompra = [];
+
+        $('.adicionar').on('click', function() {
+            const idComponente = $(this).data('id');
+            const nomeComponente = $(this).data('nome');
+            const precoComponente = $(`#preco_${idComponente}`).val();
+            const quantidadeComponente = $(`#quantidade_${idComponente}`).val();
+            const idFornecedor = $(this).data('fornecedor');
+
+            if (quantidadeComponente && quantidadeComponente > 0 && precoComponente && precoComponente > 0) {
+                const componenteIndex = componentesCompra.findIndex(comp => comp[1] === idComponente);
+                
+                if (componenteIndex !== -1) {
+                    componentesCompra[componenteIndex][4] += parseInt(quantidadeComponente);
+                    componentesCompra[componenteIndex][3] = parseFloat(precoComponente);
+                } else {
+                    componentesCompra.push([idFornecedor, idComponente, nomeComponente, parseFloat(precoComponente), parseInt(quantidadeComponente)]);
+                }
+
+                $('#componentes-compra-list').empty();
+
+                // Adicione a tabela e a linha de cabeçalho
+                $('#componentes-compra-list').append(`
+                    <table class="table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Nome</th>
+                                <th>Preço por Unidade</th>
+                                <th>Quantidade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                    </table>
+                `);
+
+                // Adicione as linhas de dados à tabela
+                componentesCompra.forEach(componente => {
+                    // Use append para adicionar cada linha à tabela
+                    $('table tbody').append(`
+                        <tr>
+                            <td>${componente[2]}</td>
+                            <td>${componente[3]}€</td>
+                            <td>${componente[4]} qt</td>
+                        </tr>
+                    `);
+                });
+
+                // Atualiza o valor do campo oculto com os dados da lista de componentes
+                $('#componentes-input').val(JSON.stringify(componentesCompra));
+            }
+        });
+    });
+</script>
+</body>
+</html>

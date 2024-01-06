@@ -1,0 +1,2215 @@
+-- Criar Tabelas sem Chaves Estrangeiras
+
+CREATE TABLE Tipo_Equipamento (
+    ID_Tipo_Equipamento SERIAL PRIMARY KEY,
+    Tipo VARCHAR(255)
+);
+
+CREATE TABLE Atributos (
+    ID_Atributo SERIAL PRIMARY KEY,
+    Atributo VARCHAR(255),
+    Descricao VARCHAR(255)
+);
+
+CREATE TABLE Valores_Atributos (
+    ID_Valor SERIAL PRIMARY KEY,
+    Valor VARCHAR(255)
+);
+
+CREATE TABLE Perfil (
+    ID_Perfil SERIAL PRIMARY KEY,
+    Perfil VARCHAR(255),
+    Permissoes VARCHAR(255)
+);
+
+CREATE TABLE Utilizadores (		
+	ID_Utilizador SERIAL PRIMARY KEY,		
+	Username VARCHAR(50)  NOT NULL,		
+	Password VARCHAR(100) NOT NULL,		
+	Nome VARCHAR(255) NOT NULL,		
+	Email VARCHAR(255) NOT NULL,		
+	Contacto VARCHAR(20),		
+	ID_Perfil INT REFERENCES Perfil(ID_Perfil) ON DELETE CASCADE	
+);		
+
+CREATE TABLE Fornecedores (
+    ID_Fornecedor SERIAL PRIMARY KEY,
+    Nome VARCHAR(255) NOT NULL,
+    Morada VARCHAR(255),
+    Contacto VARCHAR(20),
+    NIF VARCHAR(20)
+);
+
+CREATE TABLE Armazens (
+    ID_Armazem SERIAL PRIMARY KEY,
+    Localizacao VARCHAR(255)
+);
+
+CREATE TABLE Componentes (
+    ID_Comp SERIAL PRIMARY KEY,
+    Descricao VARCHAR(255),
+    Nome VARCHAR(255),
+    ID_Fornecedor INT REFERENCES Fornecedores(ID_Fornecedor) ON DELETE CASCADE
+);
+
+CREATE TABLE Encomenda_Compra (
+    ID_Enc_compra SERIAL PRIMARY KEY,
+    Estado VARCHAR(255),
+    Data DATE,
+    ID_Utilizador INT REFERENCES Utilizadores(ID_Utilizador) ON DELETE CASCADE,
+    ID_Fornecedor INT REFERENCES Fornecedores(ID_Fornecedor) ON DELETE CASCADE
+);
+
+CREATE TABLE Componentes_Encomenda_Compra (
+    ID_Componentes_Encomenda_Compra SERIAL PRIMARY KEY,
+    ID_Enc_compra INT REFERENCES Encomenda_Compra(ID_Enc_compra) ON DELETE CASCADE,
+    ID_Comp INT REFERENCES Componentes(ID_Comp) ON DELETE CASCADE,
+    Preco DECIMAL,
+    Quantidade INT
+);
+
+CREATE TABLE Guia_Remessa_Compra (
+	ID_Remessa_compra SERIAL PRIMARY KEY,
+	Data DATE,
+	NIF VARCHAR(20),
+	ID_Enc_compra INT REFERENCES Encomenda_Compra(ID_Enc_compra) ON DELETE CASCADE
+);
+
+-- Componentes da Guia de Remessa de Compra
+CREATE TABLE Componentes_Guia_Remessa_Compra (
+ID_Componentes_Guia_Remessa_Compra SERIAL PRIMARY KEY,
+ID_Remessa_compra INT REFERENCES Guia_Remessa_Compra(ID_Remessa_compra) ON DELETE CASCADE,
+ID_Comp INT REFERENCES Componentes(ID_Comp) ON DELETE CASCADE,
+Quantidade INT,
+ID_Armazem INT REFERENCES Armazens(ID_Armazem) ON DELETE CASCADE
+);
+
+CREATE TABLE Mao_Obra (
+    ID_Mao_Obra SERIAL PRIMARY KEY,
+    Tipo VARCHAR(255),
+    Custo DECIMAL
+);
+
+CREATE TABLE Equipamentos (
+    ID_Equip SERIAL PRIMARY KEY,
+    Nome VARCHAR(255),
+    Descricao VARCHAR(255),
+    Preco_Venda DECIMAL,
+    Tipo_Equipamento INT REFERENCES Tipo_Equipamento(ID_Tipo_Equipamento) ON DELETE CASCADE
+);
+
+CREATE TABLE Ficha_Producao (
+    ID_Ficha_prod SERIAL PRIMARY KEY,
+    ID_Equip INT REFERENCES Equipamentos(ID_Equip) ON DELETE CASCADE,
+    ID_Mao_Obra INT REFERENCES Mao_Obra(ID_Mao_Obra) ON DELETE CASCADE,
+    ID_Utilizador INT REFERENCES Utilizadores(ID_Utilizador) ON DELETE CASCADE,
+    Data_Hora_Inicio TIMESTAMP,
+    Data_Hora_Fim TIMESTAMP,
+    Quantidade INT,
+    ID_Armazem INT REFERENCES Armazens(ID_Armazem) ON DELETE CASCADE
+);
+
+CREATE TABLE Componentes_Ficha_Producao (
+    ID_Comp_Fich SERIAL PRIMARY KEY,
+    ID_Ficha_prod INT REFERENCES Ficha_Producao(ID_Ficha_prod) ON DELETE CASCADE,
+    ID_Comp INT REFERENCES Componentes(ID_Comp) ON DELETE CASCADE,
+    Quantidade INT,
+    ID_Armazem INT REFERENCES Armazens(ID_Armazem) ON DELETE CASCADE
+);
+
+CREATE TABLE Clientes (
+    ID_Cliente SERIAL PRIMARY KEY,
+    Nome VARCHAR(255) NOT NULL,
+    Morada VARCHAR(255),
+    Contacto VARCHAR(20),
+    NIF VARCHAR(20)
+);
+
+CREATE TABLE Encomenda_Venda (
+    ID_Enc_Venda SERIAL PRIMARY KEY,
+    ID_Utilizador INT REFERENCES Utilizadores(ID_Utilizador) ON DELETE CASCADE,
+    ID_Cliente INT REFERENCES Clientes(ID_Cliente) ON DELETE CASCADE,
+    Estado VARCHAR(255),
+    Data DATE
+);
+
+CREATE TABLE Equipamentos_Encomenda_Venda (
+    ID_Equipamentos_Encomenda_Venda SERIAL PRIMARY KEY,
+    ID_Enc_Venda INT REFERENCES Encomenda_Venda(ID_Enc_Venda) ON DELETE CASCADE,
+    ID_Equipamento INT REFERENCES Equipamentos(ID_Equip) ON DELETE CASCADE,
+    Preco_Total DECIMAL,
+    Quantidade INT,
+    ID_Armazem INT REFERENCES Armazens(ID_Armazem)
+);
+
+CREATE TABLE Guia_Remessa_Venda (
+    ID_Remessa_Venda SERIAL PRIMARY KEY,
+    ID_Enc_Venda INT REFERENCES Encomenda_Venda(ID_Enc_Venda) ON DELETE CASCADE,
+    Data DATE,
+    NIF VARCHAR(20)
+);
+
+CREATE TABLE Equipamentos_Guia_Remessa_Venda (
+    ID_Equipamento_Guia_Remessa_Venda SERIAL PRIMARY KEY,
+    ID_Remessa_Venda INT REFERENCES Guia_Remessa_Venda(ID_Remessa_Venda) ON DELETE CASCADE,
+    ID_Equipamento INT REFERENCES Equipamentos(ID_Equip) ON DELETE CASCADE,
+    Quantidade INT,
+    MoradaDestino VARCHAR(255)
+);
+
+--OBJETOS
+
+    CREATE OR REPLACE PROCEDURE sp_utilizadores_CREATE (
+        IN p_username VARCHAR(50),
+        IN p_password VARCHAR(100),
+        IN p_nome VARCHAR(255),
+        IN p_email VARCHAR(255),
+        IN p_contacto VARCHAR(20),
+        IN p_id_perfil INT
+    )
+AS $$
+BEGIN
+    -- Inserir dados na tabela Utilizadores
+    INSERT INTO Utilizadores (username, password, nome, email, contacto, id_perfil)
+    VALUES (p_username, p_password, p_nome, p_email, p_contacto, p_id_perfil);
+        
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Criação de função para Ler Dados de um Utilizador
+CREATE OR REPLACE FUNCTION fn_utilizadores_READ(id INT)
+RETURNS SETOF Utilizadores AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Utilizadores WHERE ID_Utilizador = id;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Criação de função para Ler Dados dos Utilizadores
+CREATE OR REPLACE FUNCTION fn_utilizadores_READALL()
+RETURNS SETOF Utilizadores AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Utilizadores;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Criação do Procedimento Armazenado para Atualizar um Utilizador
+CREATE OR REPLACE PROCEDURE sp_Utilizadores_UPDATE (
+    IN p_ID_Utilizador INT,
+    IN p_Username VARCHAR(50),
+    IN p_Password VARCHAR(100),
+    IN p_Nome VARCHAR(255),
+    IN p_Email VARCHAR(255),
+    IN p_Contacto VARCHAR(20),
+    IN p_ID_Perfil INT
+)
+AS $$
+BEGIN
+    UPDATE Utilizadores
+    SET
+        Username = p_Username,
+        Password = p_Password,
+        Nome = p_Nome,
+        Email = p_Email,
+        Contacto = p_Contacto,
+        ID_Perfil = p_ID_Perfil
+    WHERE ID_Utilizador = p_ID_Utilizador;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Criação do Procedimento Armazenado para Excluir um Utilizador
+CREATE OR REPLACE PROCEDURE sp_Utilizadores_DELETE (
+    IN p_ID_Utilizador INT
+)
+AS $$
+BEGIN
+    -- Excluir dados na tabela Utilizadores
+    DELETE FROM Utilizadores
+    WHERE ID_Utilizador = p_ID_Utilizador;
+    
+    -- Pode adicionar mais lógica ou manipulação de dados, se necessário
+    
+END;
+$$ LANGUAGE plpgsql;
+
+
+--ARMAZÉNS--
+-- Criação do Procedimento Armazenado para Inserir um Armazém
+CREATE OR REPLACE PROCEDURE sp_Armazens_CREATE (
+    IN p_Localizacao VARCHAR(255)
+)
+AS $$
+BEGIN
+    INSERT INTO Armazens (Localizacao)
+    VALUES (p_Localizacao);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para retornar todos os armazéns
+CREATE OR REPLACE FUNCTION fn_Armazens_READALL()
+RETURNS SETOF Armazens AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Armazens;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para retornar um armazém por ID
+CREATE OR REPLACE FUNCTION fn_Armazem_READ(p_ID_Armazem INT)
+RETURNS SETOF Armazens AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Armazens WHERE ID_Armazem = p_ID_Armazem;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Criação do Procedimento Armazenado para editar um Armazém
+CREATE OR REPLACE PROCEDURE sp_Armazens_UPDATE (
+    IN p_ID_Armazem INT,
+    IN p_Localizacao VARCHAR(255)
+)
+AS $$
+BEGIN
+    -- Atualizar dados na tabela Armazens
+    UPDATE Armazens
+    SET
+        Localizacao = p_Localizacao
+    WHERE ID_Armazem = p_ID_Armazem;
+    
+    -- Pode adicionar mais lógica ou manipulação de dados, se necessário
+    
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Criação do Procedimento Armazenado para eliminar um Armazém
+CREATE OR REPLACE PROCEDURE sp_Armazens_DELETE (
+    IN p_ID_Armazem INT
+)
+AS $$
+BEGIN
+    DELETE FROM Armazens
+    WHERE ID_Armazem = p_ID_Armazem;
+        
+END;
+$$ LANGUAGE plpgsql;
+
+
+--COMPONENTES--
+-- Criação do Procedimento Armazenado para Inserir um Componente
+CREATE OR REPLACE PROCEDURE sp_Componentes_CREATE (
+    IN p_Descricao VARCHAR(255),
+    IN p_Nome VARCHAR(255),
+    IN p_id_fornecedor INT
+)
+AS $$
+BEGIN
+    INSERT INTO Componentes (Descricao, Nome, ID_Fornecedor)
+    VALUES (p_Descricao, p_Nome, p_id_fornecedor);
+        
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Função para buscar todos os componentes
+CREATE OR REPLACE FUNCTION fn_Componentes_READALL()
+RETURNS SETOF Componentes AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Componentes;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para buscar um componente por ID
+CREATE OR REPLACE FUNCTION fn_Componente_READ(p_ID_Comp INT)
+RETURNS SETOF Componentes AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Componentes WHERE ID_Comp = p_ID_Comp;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para buscar um componente por ID Fornecedor
+CREATE OR REPLACE FUNCTION fn_Componente_READForn(p_ID_Forn INT)
+RETURNS SETOF Componentes AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Componentes WHERE ID_Fornecedor = p_ID_Forn;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Criação do Procedimento Armazenado para Atualizar um Componente
+CREATE OR REPLACE PROCEDURE sp_Componentes_UPDATE (
+    IN p_ID_Comp INT,
+    IN p_Descricao VARCHAR(255),
+    IN p_Nome VARCHAR(255)
+)
+AS $$
+BEGIN
+    -- Atualizar dados na tabela Componentes
+    UPDATE Componentes
+    SET
+        Descricao = p_Descricao,
+        Nome = p_Nome
+    WHERE ID_Comp = p_ID_Comp;
+    
+    -- Pode adicionar mais lógica ou manipulação de dados, se necessário
+    
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Criação do Procedimento Armazenado para Excluir um Componente
+CREATE OR REPLACE PROCEDURE sp_Componentes_DELETE (
+    IN p_ID_Comp INT
+)
+AS $$
+BEGIN
+    -- Excluir dados na tabela Componentes
+    DELETE FROM Componentes
+    WHERE ID_Comp = p_ID_Comp;
+    
+    -- Pode adicionar mais lógica ou manipulação de dados, se necessário
+    
+END;
+$$ LANGUAGE plpgsql;
+
+ 
+--COMPONENTES DA ENCOMENDA--
+-- Criação do Procedimento Armazenado para Inserir um Componente na Encomenda de Compra
+CREATE OR REPLACE PROCEDURE sp_Componentes_Encomenda_Compra_CREATE (
+    IN p_ID_Enc_Compra INT,
+    IN p_ID_Comp INT,
+    IN p_Preco DECIMAL,
+    IN p_Quantidade INT
+)
+AS $$
+BEGIN
+    -- Inserir dados na tabela Componentes_Encomenda_Compra
+    INSERT INTO Componentes_Encomenda_Compra (ID_Enc_compra, ID_Comp, Preco, Quantidade)
+    VALUES (p_ID_Enc_Compra, p_ID_Comp, p_Preco, p_Quantidade);
+    
+    -- Pode adicionar mais lógica ou manipulação de dados, se necessário
+    
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Função para buscar todos os detalhes de componentes em encomendas de compra
+CREATE OR REPLACE FUNCTION fn_Componentes_Encomenda_Compra_READALL()
+RETURNS SETOF Componentes_Encomenda_Compra AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Componentes_Encomenda_Compra;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para buscar um detalhe de componente em encomenda de compra por ID
+CREATE OR REPLACE FUNCTION fn_Componentes_Encomenda_Compra_READ(p_ID_Componentes_Enc_Compra INT)
+RETURNS SETOF Componentes_Encomenda_Compra AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Componentes_Encomenda_Compra WHERE ID_Componentes_Encomenda_Compra = p_ID_Componentes_Enc_Compra;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para buscar um detalhe de componente em encomenda de compra por ID da encomenda
+CREATE OR REPLACE FUNCTION fn_Componentes_Encomenda_Compra_READByEnc(p_ID_Enc_Compra INT)
+RETURNS SETOF Componentes_Encomenda_Compra AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Componentes_Encomenda_Compra WHERE ID_Enc_compra = p_ID_Enc_Compra;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Criação do Procedimento Armazenado para Atualizar um Componente na Encomenda de Compra
+CREATE OR REPLACE PROCEDURE sp_Componentes_Encomenda_Compra_UPDATE (
+    IN p_ID_Componentes_Enc_Compra INT,
+    IN p_ID_Enc_Compra INT,
+    IN p_ID_Comp INT,
+    IN p_Preco DECIMAL,
+    IN p_Quantidade INT
+)
+AS $$
+BEGIN
+    -- Atualizar dados na tabela Componentes_Encomenda_Compra
+    UPDATE Componentes_Encomenda_Compra
+    SET
+        ID_Enc_compra = p_ID_Enc_Compra,
+        ID_Comp = p_ID_Comp,
+        Preco = p_Preco,
+        Quantidade = p_Quantidade;
+    
+    -- Pode adicionar mais lógica ou manipulação de dados, se necessário
+    
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Criação do Procedimento Armazenado para Excluir um Componente na Encomenda de Compra
+CREATE OR REPLACE PROCEDURE sp_Componentes_Encomenda_Compra_DELETE (
+    IN p_ID_Componentes_Enc_Compra INT
+)
+AS $$
+BEGIN
+    -- Excluir dados na tabela Componentes_Encomenda_Compra
+    DELETE FROM Componentes_Encomenda_Compra
+    WHERE ID_Componentes_Encomenda_Compra = p_ID_Componentes_Enc_Compra;
+    
+    -- Pode adicionar mais lógica ou manipulação de dados, se necessário
+    
+END;
+$$ LANGUAGE plpgsql;
+
+
+--COMPONENTES GUIA DE REMESSA COMPRA--
+
+-- Criação do Procedimento Armazenado para Inserir um Componente na Guia de Remessa de Compra
+CREATE OR REPLACE PROCEDURE sp_Componentes_Guia_Remessa_Compra_CREATE (
+    IN p_ID_Remessa_Compra INT,
+    IN p_ID_Comp INT,
+    IN p_Quantidade INT,
+    IN p_ID_Armazem INT
+)
+AS $$
+BEGIN
+    -- Inserir dados na tabela Componentes_Guia_Remessa_Compra
+    INSERT INTO Componentes_Guia_Remessa_Compra (ID_Remessa_compra, ID_Comp, Quantidade, ID_Armazem)
+    VALUES (p_ID_Remessa_Compra, p_ID_Comp, p_Quantidade, p_ID_Armazem);
+        
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Função para buscar todos os detalhes dos componentes na guia de remessa de compra
+CREATE OR REPLACE FUNCTION fn_Componentes_Guia_Remessa_Compra_READALL()
+RETURNS SETOF Componentes_Guia_Remessa_Compra AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Componentes_Guia_Remessa_Compra;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para buscar detalhes dos componentes na guia de remessa de compra por ID_Remessa_compra
+CREATE OR REPLACE FUNCTION fn_Componentes_Guia_Remessa_Compra_READ(p_ID_Remessa_Compra INT)
+RETURNS SETOF Componentes_Guia_Remessa_Compra AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Componentes_Guia_Remessa_Compra WHERE ID_Remessa_Compra = p_ID_Remessa_Compra;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Criação do Procedimento Armazenado para Atualizar um Componente na Guia de Remessa de Compra
+CREATE OR REPLACE PROCEDURE sp_Componentes_Guia_Remessa_Compra_UPDATE (
+    IN p_ID_Componentes_Guia_Remessa_Compra INT,
+    IN p_ID_Remessa_Compra INT,
+    IN p_ID_Comp INT,
+    IN p_Quantidade INT,
+    IN p_ID_Armazem INT
+)
+AS $$
+BEGIN
+    -- Atualizar dados na tabela Componentes_Guia_Remessa_Compra
+    UPDATE Componentes_Guia_Remessa_Compra
+    SET
+        ID_Remessa_compra = p_ID_Remessa_Compra,
+        ID_Comp = p_ID_Comp,
+        Quantidade = p_Quantidade,
+        ID_Armazem = p_ID_Armazem
+    WHERE ID_Componentes_Guia_Remessa_Compra = p_ID_Componentes_Guia_Remessa_Compra;
+        
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Criação do Procedimento Armazenado para Excluir um Componente na Guia de Remessa de Compra
+CREATE OR REPLACE PROCEDURE sp_Componentes_Guia_Remessa_Compra_DELETE (
+    IN p_ID_Componentes_Guia_Remessa_Compra INT
+)
+AS $$
+BEGIN
+    -- Excluir dados na tabela Componentes_Guia_Remessa_Compra
+    DELETE FROM Componentes_Guia_Remessa_Compra
+    WHERE ID_Componentes_Guia_Remessa_Compra = p_ID_Componentes_Guia_Remessa_Compra;
+        
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+--FICHAS DE PRODUÇÃO
+
+-- Criação do Procedimento Armazenado para Inserir um Componente na Ficha de Produção
+CREATE OR REPLACE PROCEDURE sp_Componentes_Ficha_Producao_CREATE (
+    IN p_ID_Ficha_prod INT,
+    IN p_ID_Comp INT,
+    IN p_Quantidade INT,
+    IN p_ID_Armazem INT
+)
+AS $$
+BEGIN
+    -- Inserir dados na tabela Componentes_Ficha_Producao
+    INSERT INTO Componentes_Ficha_Producao (ID_Ficha_prod, ID_Comp, Quantidade, ID_Armazem)
+    VALUES (p_ID_Ficha_prod, p_ID_Comp, p_Quantidade, p_ID_Armazem);
+        
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para buscar todos os detalhes dos componentes na ficha de produção
+CREATE OR REPLACE FUNCTION fn_Componentes_Ficha_Producao_READALL()
+RETURNS SETOF Componentes_Ficha_Producao AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Componentes_Ficha_Producao;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para buscar detalhes dos componentes na ficha de produção por ID_Comp_Fich
+CREATE OR REPLACE FUNCTION fn_Componentes_Ficha_Producao_READ(p_ID_Comp_Fich INT)
+RETURNS SETOF Componentes_Ficha_Producao AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Componentes_Ficha_Producao WHERE ID_Comp_Fich = p_ID_Comp_Fich;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Criação do Procedimento Armazenado para Atualizar um Componente na Ficha de Produção
+CREATE OR REPLACE PROCEDURE sp_Componentes_Ficha_Producao_UPDATE (
+    IN p_ID_Comp_Fich INT,
+    IN p_ID_Ficha_prod INT,
+    IN p_ID_Comp INT,
+    IN p_Quantidade INT,
+    IN p_ID_Armazem INT
+)
+AS $$
+BEGIN
+    -- Atualizar dados na tabela Componentes_Ficha_Producao
+    UPDATE Componentes_Ficha_Producao
+    SET
+        ID_Ficha_prod = p_ID_Ficha_prod,
+        ID_Comp = p_ID_Comp,
+        Quantidade = p_Quantidade,
+        ID_Armazem = p_ID_Armazem
+    WHERE ID_Comp_Fich = p_ID_Comp_Fich;
+        
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Criação do Procedimento Armazenado para Excluir um Componente na Ficha de Produção
+CREATE OR REPLACE PROCEDURE sp_Componentes_Ficha_Producao_DELETE (
+    IN p_ID_Comp_Fich INT
+)
+AS $$
+BEGIN
+    -- Excluir dados na tabela Componentes_Ficha_Producao
+    DELETE FROM Componentes_Ficha_Producao
+    WHERE ID_Comp_Fich = p_ID_Comp_Fich;
+    
+    -- Pode adicionar mais lógica ou manipulação de dados, se necessário
+    
+END;
+$$ LANGUAGE plpgsql;
+
+--PERFIL--
+CREATE OR REPLACE PROCEDURE sp_perfil_CREATE(
+    IN p_perfil VARCHAR(255),
+    IN p_permissoes VARCHAR(255)
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    next_id_perfil INT;
+BEGIN
+    SELECT nextval('perfil_id_perfil_seq') INTO next_id_perfil;
+
+    INSERT INTO perfil (id_perfil, perfil, permissoes)
+    VALUES (next_id_perfil, p_perfil, p_permissoes);
+
+END $$;
+
+CREATE OR REPLACE PROCEDURE sp_perfil_UPDATE(
+    IN p_id_perfil INT,
+    IN p_perfil VARCHAR(255),
+    IN p_permissoes VARCHAR(255)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE perfil
+    SET perfil = p_perfil,
+        permissoes = p_permissoes
+    WHERE id_perfil = p_id_perfil;
+
+END $$;
+
+-- Função para ler todos os perfis
+CREATE OR REPLACE FUNCTION fn_perfil_READALL()
+RETURNS SETOF perfil AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM perfil;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para ler um perfil por ID
+CREATE OR REPLACE FUNCTION fn_perfil_READ(p_id_perfil INT)
+RETURNS SETOF perfil AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM perfil WHERE id_perfil = p_id_perfil;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE PROCEDURE sp_perfil_DELETE(
+    IN p_id_perfil INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM perfil
+    WHERE id_perfil = p_id_perfil;
+
+END $$;
+
+
+--MÃO DE OBRA--
+
+-- Criação do Procedimento Armazenado para Inserir um Registo na Tabela Mao_Obra
+CREATE OR REPLACE PROCEDURE sp_Mao_Obra_CREATE (
+    IN p_Tipo VARCHAR(255),
+    IN p_Custo DECIMAL
+)
+AS $$
+BEGIN
+    -- Inserir dados na tabela Mao_Obra
+    INSERT INTO Mao_Obra (Tipo, Custo)
+    VALUES (p_Tipo, p_Custo);
+        
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para buscar todos os registos da tabela Mao_Obra
+CREATE OR REPLACE FUNCTION fn_Mao_Obra_READALL()
+RETURNS SETOF Mao_Obra AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Mao_Obra;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para buscar um registo da tabela Mao_Obra por ID
+CREATE OR REPLACE FUNCTION fn_Mao_Obra_READ(p_ID_Mao_Obra INT)
+RETURNS SETOF Mao_Obra AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Mao_Obra WHERE ID_Mao_Obra = p_ID_Mao_Obra;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Criação do Procedimento Armazenado para editar um Registo na Tabela Mao_Obra
+CREATE OR REPLACE PROCEDURE sp_Mao_Obra_UPDATE (
+    IN p_ID_Mao_Obra INT,
+    IN p_Tipo VARCHAR(255),
+    IN p_Custo DECIMAL
+)
+AS $$
+BEGIN
+    -- Atualizar dados na tabela Mao_Obra
+    UPDATE Mao_Obra
+    SET
+        Tipo = p_Tipo,
+        Custo = p_Custo
+    WHERE ID_Mao_Obra = p_ID_Mao_Obra;
+        
+END;
+$$ LANGUAGE plpgsql;
+
+-- Criação do Procedimento Armazenado para Excluir um Registo na Tabela Mao_Obra
+CREATE OR REPLACE PROCEDURE sp_Mao_Obra_DELETE (
+    IN p_ID_Mao_Obra INT
+)
+AS $$
+BEGIN
+    -- Excluir dados na tabela Mao_Obra
+    DELETE FROM Mao_Obra
+    WHERE ID_Mao_Obra = p_ID_Mao_Obra;
+        
+END;
+$$ LANGUAGE plpgsql;
+
+
+--TIPO EQUIPAMENTO--
+	
+-- Criação do Procedimento Armazenado para Inserir um Registo na Tabela Tipo_Equipamento
+CREATE OR REPLACE PROCEDURE sp_Tipo_Equipamento_CREATE (
+    IN p_Tipo VARCHAR(255)
+)
+AS $$
+BEGIN
+    -- Inserir dados na tabela Tipo_Equipamento
+    INSERT INTO Tipo_Equipamento (Tipo)
+    VALUES (p_Tipo);
+    
+    -- Pode adicionar mais lógica ou manipulação de dados, se necessário
+    
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Função para ler todos os registos da tabela Tipo_Equipamento
+CREATE OR REPLACE FUNCTION fn_Tipo_Equipamento_READALL()
+RETURNS SETOF Tipo_Equipamento AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Tipo_Equipamento;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para ler um registo da tabela Tipo_Equipamento por ID
+CREATE OR REPLACE FUNCTION fn_Tipo_Equipamento_READ(p_ID_Tipo_Equipamento INT)
+RETURNS SETOF Tipo_Equipamento AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Tipo_Equipamento WHERE ID_Tipo_Equipamento = p_ID_Tipo_Equipamento;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Criação do Procedimento Armazenado para Atualizar um Registo na Tabela Tipo_Equipamento
+CREATE OR REPLACE PROCEDURE sp_Tipo_Equipamento_UPDATE (
+    IN p_ID_Tipo_Equipamento INT,
+    IN p_Tipo VARCHAR(255)
+)
+AS $$
+BEGIN
+    -- Atualizar dados na tabela Tipo_Equipamento
+    UPDATE Tipo_Equipamento
+    SET
+        Tipo = p_Tipo
+    WHERE ID_Tipo_Equipamento = p_ID_Tipo_Equipamento;
+        
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Criação do Procedimento Armazenado para Excluir um Registo na Tabela Tipo_Equipamento
+CREATE OR REPLACE PROCEDURE sp_Tipo_Equipamento_DELETE (
+    IN p_ID_Tipo_Equipamento INT
+)
+AS $$
+BEGIN
+    -- Excluir dados na tabela Tipo_Equipamento
+    DELETE FROM Tipo_Equipamento
+    WHERE ID_Tipo_Equipamento = p_ID_Tipo_Equipamento;
+        
+END;
+$$ LANGUAGE plpgsql;
+	
+--EQUIPAMENTOS ENCOMENDA VENDA--
+	-- Criação do Procedimento Armazenado para Inserir um Equipamento na Encomenda de Venda
+CREATE OR REPLACE PROCEDURE sp_Equipamentos_Encomenda_Venda_CREATE (
+    IN p_ID_Enc_Venda INT,
+    IN p_ID_Equipamento INT,
+    IN p_Preco_Total DECIMAL,
+    IN p_Quantidade INT,
+    IN p_ID_Armazem INT
+)
+AS $$
+BEGIN
+    -- Inserir dados na tabela Equipamentos_Encomenda_Venda
+    INSERT INTO Equipamentos_Encomenda_Venda (ID_Enc_Venda, ID_Equipamento, Preco_Total, Quantidade, ID_Armazem)
+    VALUES (p_ID_Enc_Venda, p_ID_Equipamento, p_Preco_Total, p_Quantidade, p_ID_Armazem);
+        
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para ler todos os equipamentos na encomenda de venda
+CREATE OR REPLACE FUNCTION fn_Equipamentos_Encomenda_Venda_READALL()
+RETURNS SETOF Equipamentos_Encomenda_Venda AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Equipamentos_Encomenda_Venda;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para ler os equipamentos na encomenda de venda por ID_Enc_Venda
+CREATE OR REPLACE FUNCTION fn_Equipamentos_Encomenda_Venda_READ(p_ID_Enc_Venda INT)
+RETURNS SETOF Equipamentos_Encomenda_Venda AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Equipamentos_Encomenda_Venda WHERE ID_Enc_Venda = p_ID_Enc_Venda;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Criação do Procedimento Armazenado para Atualizar um Equipamento na Encomenda de Venda
+CREATE OR REPLACE PROCEDURE sp_Equipamentos_Encomenda_Venda_UPDATE (
+    IN p_ID_Equipamentos_Encomenda_Venda INT,
+    IN p_ID_Enc_Venda INT,
+    IN p_ID_Equipamento INT,
+    IN p_Preco_Total DECIMAL,
+    IN p_Quantidade INT,
+    IN p_ID_Armazem INT
+)
+AS $$
+BEGIN
+    -- Atualizar dados na tabela Equipamentos_Encomenda_Venda
+    UPDATE Equipamentos_Encomenda_Venda
+    SET
+        ID_Enc_Venda = p_ID_Enc_Venda,
+        ID_Equipamento = p_ID_Equipamento,
+        Preco_Total = p_Preco_Total,
+        Quantidade = p_Quantidade,
+        ID_Armazem = p_ID_Armazem
+    WHERE ID_Equipamentos_Encomenda_Venda = p_ID_Equipamentos_Encomenda_Venda;
+        
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Criação do Procedimento Armazenado para Excluir um Equipamento na Encomenda de Venda
+CREATE OR REPLACE PROCEDURE sp_Equipamentos_Encomenda_Venda_DELETE (
+    IN p_ID_Equipamentos_Encomenda_Venda INT
+)
+AS $$
+BEGIN
+    -- Excluir dados na tabela Equipamentos_Encomenda_Venda
+    DELETE FROM Equipamentos_Encomenda_Venda
+    WHERE ID_Equipamentos_Encomenda_Venda = p_ID_Equipamentos_Encomenda_Venda;
+        
+END;
+$$ LANGUAGE plpgsql;
+
+
+--EQUIPAMENTOS GUIA DE REMESSA VENDA--
+	-- Criação do Procedimento Armazenado para Inserir um Equipamento na Guia de Remessa de Venda
+CREATE OR REPLACE PROCEDURE sp_Equipamentos_Guia_Remessa_Venda_CREATE (
+    IN p_ID_Remessa_Venda INT,
+    IN p_ID_Equipamento INT,
+    IN p_Quantidade INT,
+    IN p_Destino VARCHAR(255)
+)
+AS $$
+BEGIN
+    -- Inserir dados na tabela Equipamentos_Guia_Remessa_Venda
+    INSERT INTO Equipamentos_Guia_Remessa_Venda (ID_Remessa_Venda, ID_Equipamento, Quantidade, MoradaDestino)
+    VALUES (p_ID_Remessa_Venda, p_ID_Equipamento, p_Quantidade, p_Destino);
+        
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Função para ler todos os equipamentos na guia de remessa de venda
+CREATE OR REPLACE FUNCTION fn_Equipamentos_Guia_Remessa_Venda_READALL()
+RETURNS SETOF Equipamentos_Guia_Remessa_Venda AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Equipamentos_Guia_Remessa_Venda;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para ler os equipamentos na guia de remessa de venda por ID_Remessa_Venda
+CREATE OR REPLACE FUNCTION fn_Equipamentos_Guia_Remessa_Venda_READ(p_ID_Remessa_Venda INT)
+RETURNS SETOF Equipamentos_Guia_Remessa_Venda AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Equipamentos_Guia_Remessa_Venda WHERE ID_Remessa_Venda = p_ID_Remessa_Venda;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Criação do Procedimento Armazenado para Atualizar um Equipamento na Guia de Remessa de Venda
+CREATE OR REPLACE PROCEDURE sp_Equipamentos_Guia_Remessa_Venda_UPDATE (
+    IN p_ID_Equipamento_Guia_Remessa_Compra INT,
+    IN p_ID_Remessa_Venda INT,
+    IN p_ID_Equipamento INT,
+    IN p_Quantidade INT
+)
+AS $$
+BEGIN
+    UPDATE Equipamentos_Guia_Remessa_Venda
+    SET
+        ID_Remessa_Venda = p_ID_Remessa_Venda,
+        ID_Equipamento = p_ID_Equipamento,
+        Quantidade = p_Quantidade
+    WHERE ID_Equipamento_Guia_Remessa_Compra = p_ID_Equipamento_Guia_Remessa_Compra;
+    
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Criação do Procedimento Armazenado para Excluir um Equipamento na Guia de Remessa de Venda
+CREATE OR REPLACE PROCEDURE sp_Equipamentos_Guia_Remessa_Venda_DELETE (
+    IN p_ID_Equipamento_Guia_Remessa_Compra INT
+)
+AS $$
+BEGIN
+    -- Excluir dados na tabela Equipamentos_Guia_Remessa_Venda
+    DELETE FROM Equipamentos_Guia_Remessa_Venda
+    WHERE ID_Equipamento_Guia_Remessa_Compra = p_ID_Equipamento_Guia_Remessa_Compra;
+        
+END;
+$$ LANGUAGE plpgsql;
+
+	
+--VALORES ATRIBUTOS--
+-- Criação do Procedimento Armazenado para Inserir um Valor de Atributo
+CREATE OR REPLACE PROCEDURE sp_Valores_Atributos_CREATE (
+    IN p_Valor VARCHAR(255)
+)
+AS $$
+BEGIN
+    -- Inserir dados na tabela Valores_Atributos
+    INSERT INTO Valores_Atributos (Valor)
+    VALUES (p_Valor);
+        
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Função para ler todos os registros da tabela Valores_Atributos
+CREATE OR REPLACE FUNCTION fn_Valores_Atributos_READALL()
+RETURNS SETOF Valores_Atributos AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Valores_Atributos;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para ler um registro da tabela Valores_Atributos por ID
+CREATE OR REPLACE FUNCTION fn_Valores_Atributos_READ(p_ID_Valor INT)
+RETURNS SETOF Valores_Atributos AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Valores_Atributos WHERE ID_Valor = p_ID_Valor;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para ler um registro da tabela Atributos por ID
+CREATE OR REPLACE FUNCTION fn_Atributos_READ(p_ID_Atributo INT)
+RETURNS SETOF Atributos AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Atributos WHERE ID_Atributo = p_ID_Atributo;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Criação do Procedimento Armazenado para Atualizar um Valor de Atributo
+CREATE OR REPLACE PROCEDURE sp_Valores_Atributos_UPDATE (
+    IN p_ID_Valor INT,
+    IN p_Valor VARCHAR(255)
+)
+AS $$
+BEGIN
+    -- Atualizar dados na tabela Valores_Atributos
+    UPDATE Valores_Atributos
+    SET
+        Valor = p_Valor
+    WHERE ID_Valor = p_ID_Valor;
+    
+    -- Pode adicionar mais lógica ou manipulação de dados, se necessário
+    
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Criação do Procedimento Armazenado para Excluir um Valor de Atributo
+CREATE OR REPLACE PROCEDURE sp_Valores_Atributos_DELETE (
+    IN p_ID_Valor INT
+)
+AS $$
+BEGIN
+    -- Excluir dados na tabela Valores_Atributos
+    DELETE FROM Valores_Atributos
+    WHERE ID_Valor = p_ID_Valor;
+    
+    -- Pode adicionar mais lógica ou manipulação de dados, se necessário
+    
+END;
+$$ LANGUAGE plpgsql;
+
+	
+--CLIENTES--
+	
+CREATE OR REPLACE PROCEDURE sp_Clientes_CREATE(
+    IN cliente_nome VARCHAR(255),
+    IN cliente_morada VARCHAR(255),
+    IN cliente_contacto VARCHAR(20),
+    IN cliente_nif VARCHAR(20)
+)
+LANGUAGE SQL
+AS $$
+INSERT INTO Clientes (Nome, Morada, Contacto, NIF)
+VALUES (cliente_nome, cliente_morada, cliente_contacto, cliente_nif);
+$$;
+	
+	
+CREATE OR REPLACE PROCEDURE sp_Clientes_UPDATE(
+    IN cliente_id INT,
+    IN cliente_nome VARCHAR(255),
+    IN cliente_morada VARCHAR(255),
+    IN cliente_contacto VARCHAR(20),
+    IN cliente_nif VARCHAR(20)
+)
+LANGUAGE SQL
+AS $$
+UPDATE Clientes
+SET Nome = cliente_nome, Morada = cliente_morada, Contacto = cliente_contacto, NIF = cliente_nif
+WHERE ID_Cliente = cliente_id;
+$$;
+
+CREATE OR REPLACE PROCEDURE sp_Clientes_DELETE(
+    IN cliente_id INTCALL sp_Equipamentos_Guia_Remessa_Venda_DELETE(1);
+)
+LANGUAGE SQL
+AS $$
+DELETE FROM Clientes
+WHERE ID_Cliente = cliente_id;
+$$;
+
+-- Função para ler um cliente específico por ID
+CREATE OR REPLACE FUNCTION fn_Clientes_READ(cliente_id INT)
+RETURNS SETOF Clientes AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Clientes WHERE ID_Cliente = cliente_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para ler todos os clientes
+CREATE OR REPLACE FUNCTION fn_Clientes_READALL()
+RETURNS SETOF Clientes AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Clientes;
+END;
+$$ LANGUAGE plpgsql;
+	
+CREATE OR REPLACE PROCEDURE sp_fornecedores_CREATE(
+    IN nome_fornecedor VARCHAR(255),
+    IN morada_fornecedor VARCHAR(255),
+    IN contacto VARCHAR(20),
+    IN nif VARCHAR(20)
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE 
+    next_fornecedores_id INT;
+BEGIN
+    SELECT nextval('fornecedores_id_fornecedor_seq') INTO next_fornecedores_id;
+
+    INSERT INTO fornecedores (id_fornecedor, nome, morada, contacto, nif)
+    VALUES (next_fornecedores_id, nome_fornecedor, morada_fornecedor, contacto, nif);
+END $$;
+
+-- Função para ler todos os fornecedores
+CREATE OR REPLACE FUNCTION fn_fornecedores_READALL()
+RETURNS SETOF fornecedores AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM fornecedores;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para ler um fornecedor por ID
+CREATE OR REPLACE FUNCTION fn_fornecedores_READ(p_id_fornecedor INT)
+RETURNS SETOF fornecedores AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM fornecedores WHERE id_fornecedor = p_id_fornecedor;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE PROCEDURE sp_fornecedores_delete(
+    IN p_id_fornecedor INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM fornecedores
+    WHERE id_fornecedor = p_id_fornecedor;
+
+    -- Pode adicionar tratamento de erro ou retorno de status, se necessário
+END $$;
+
+CREATE OR REPLACE PROCEDURE sp_fornecedores_UPDATE(
+    IN p_id_fornecedor INT,
+    IN p_nome_fornecedor VARCHAR(255),
+    IN p_morada_fornecedor VARCHAR(255),
+    IN p_contacto VARCHAR(20),
+    IN p_nif VARCHAR(20)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE fornecedores
+    SET 
+        nome = p_nome_fornecedor,
+        morada = p_morada_fornecedor,
+        contacto = p_contacto,
+        nif = p_nif
+    WHERE id_fornecedor = p_id_fornecedor;
+END $$;
+
+------------------------------------------------------------------------------------
+
+CREATE OR REPLACE PROCEDURE sp_encomenda_compra_create(
+    IN p_id_utilizador INT,
+    IN p_id_fornecedor INT,
+    OUT p_id_enc_compra INT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    next_id_enc_compra INT;
+BEGIN
+    SELECT nextval('encomenda_compra_id_enc_compra_seq') INTO next_id_enc_compra;
+
+    INSERT INTO encomenda_compra (id_enc_compra, estado, data, id_utilizador, id_fornecedor)
+    VALUES (next_id_enc_compra, 'Pendente', CURRENT_DATE, p_id_utilizador, p_id_fornecedor)
+    RETURNING id_enc_compra INTO p_id_enc_compra;
+    -- Pode adicionar tratamento de erro ou retorno de status, se necessário
+END $$;
+
+CREATE OR REPLACE PROCEDURE sp_encomenda_compra_update(
+    IN p_id_enc_compra INT,
+    IN p_estado VARCHAR(255),
+    IN p_data DATE,
+    IN p_id_utilizador INT,
+    IN p_id_fornecedor INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE encomenda_compra
+    SET estado = p_estado,
+        data = p_data,
+        id_utilizador = p_id_utilizador,
+        id_fornecedor = p_id_fornecedor
+    WHERE id_enc_compra = p_id_enc_compra;
+
+    -- Pode adicionar tratamento de erro ou retorno de status, se necessário
+END $$;
+
+
+-- Função para ler todas as encomendas de compra
+CREATE OR REPLACE FUNCTION fn_encomenda_compra_READALL()
+RETURNS SETOF encomenda_compra AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM encomenda_compra;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para ler uma encomenda de compra por ID
+CREATE OR REPLACE FUNCTION fn_encomenda_compra_READ(p_id_enc_compra INT)
+RETURNS SETOF encomenda_compra AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM encomenda_compra WHERE id_enc_compra = p_id_enc_compra;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE PROCEDURE sp_encomenda_compra_delete(
+    IN p_id_enc_compra INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM encomenda_compra
+    WHERE id_enc_compra = p_id_enc_compra;
+
+    -- Pode adicionar tratamento de erro ou retorno de status, se necessário
+END $$;
+
+
+------------------------------------------------------------------------------------
+
+CREATE OR REPLACE PROCEDURE sp_equipamentos_create(
+    IN p_nome VARCHAR(255),
+    IN p_descricao VARCHAR(255),
+    IN p_preco_venda DECIMAL,
+    IN p_tipo_equipamento INT,
+    OUT p_novo_id INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO equipamentos (nome, descricao, preco_venda, tipo_equipamento)
+    VALUES (p_nome, p_descricao, p_preco_venda, p_tipo_equipamento)
+    RETURNING id_equip INTO p_novo_id;
+
+    -- Pode adicionar tratamento de erro ou retorno de status, se necessário
+END $$;
+
+CREATE OR REPLACE PROCEDURE sp_equipamentos_update(
+    IN p_id_equip INT,
+    IN p_nome VARCHAR(255),
+    IN p_descricao VARCHAR(255),
+    IN p_preco_venda DECIMAL,
+    IN p_tipo_equipamento INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE equipamentos
+    SET nome = p_nome,
+        descricao = p_descricao,
+        preco_venda = p_preco_venda,
+        tipo_equipamento = p_tipo_equipamento
+    WHERE id_equip = p_id_equip;
+
+    -- Pode adicionar tratamento de erro ou retorno de status, se necessário
+END $$;
+
+
+CREATE OR REPLACE PROCEDURE sp_equipamentos_delete(
+    IN p_id_equip INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM equipamentos
+    WHERE id_equip = p_id_equip;
+
+    -- Pode adicionar tratamento de erro ou retorno de status, se necessário
+END $$;
+
+-- Função para ler todos os equipamentos
+CREATE OR REPLACE FUNCTION fn_equipamentos_READALL()
+RETURNS SETOF equipamentos AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM equipamentos;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para ler um equipamento por ID
+CREATE OR REPLACE FUNCTION fn_equipamentos_READ(p_id_equip INT)
+RETURNS SETOF equipamentos AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM equipamentos WHERE id_equip = p_id_equip;
+END;
+$$ LANGUAGE plpgsql;
+
+------------------------------------------------------------------------------------
+
+CREATE OR REPLACE PROCEDURE sp_guia_remessa_venda_create(
+    IN p_id_enc_venda INT,
+    IN p_nif VARCHAR(20),
+    OUT p_id_guia_venda INT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    next_id_guia_venda INT;
+BEGIN
+    SELECT nextval('guia_remessa_venda_id_remessa_venda_seq') INTO next_id_guia_venda;
+    INSERT INTO guia_remessa_venda(ID_Remessa_Venda, id_enc_venda, data, nif)
+    VALUES (next_id_guia_venda, p_id_enc_venda, CURRENT_DATE, p_nif)
+    RETURNING ID_Remessa_Venda INTO p_id_guia_venda;
+    -- Pode adicionar tratamento de erro ou retorno de status, se necessário
+END $$;
+
+CREATE OR REPLACE PROCEDURE sp_guia_remessa_venda_update(
+    IN p_id_remessa_venda INT,
+    IN p_id_enc_venda INT,
+    IN p_data DATE,
+    IN p_nif VARCHAR(20)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE guia_remessa_venda
+    SET id_enc_venda = p_id_enc_venda,
+        data = p_data,
+        nif = p_nif
+    WHERE id_remessa_venda = p_id_remessa_venda;
+
+    -- Pode adicionar tratamento de erro ou retorno de status, se necessário
+END $$;
+
+
+CREATE OR REPLACE PROCEDURE sp_guia_remessa_venda_delete(
+    IN p_id_remessa_venda INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM guia_remessa_venda
+    WHERE id_remessa_venda = p_id_remessa_venda;
+
+    -- Pode adicionar tratamento de erro ou retorno de status, se necessário
+END $$;
+
+-- Função para ler todas as guias de remessa de venda
+CREATE OR REPLACE FUNCTION fn_guia_remessa_venda_READALL()
+RETURNS SETOF guia_remessa_venda AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM guia_remessa_venda;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para ler uma guia de remessa de venda por ID do id_enc_venda
+CREATE OR REPLACE FUNCTION fn_guia_remessa_venda_READ(p_id_enc_venda INT)
+RETURNS SETOF guia_remessa_venda AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM guia_remessa_venda WHERE id_enc_venda = p_id_enc_venda;
+END;
+$$ LANGUAGE plpgsql;
+	
+CREATE OR REPLACE VIEW VIEW_stocks_read_equipamentos AS
+SELECT 
+      C1.ID_Armazem,
+      A1.Localizacao AS Localizacao_Armazem,
+      C1.ID_Equip,
+      E.Nome AS Nome,
+      E.Descricao AS Descricao,
+      E.Preco_Venda AS Preco,
+      TE.Tipo AS Tipo,
+      COALESCE(C1.QuantidadeTotal, 0) AS QuantidadeTotal_Ficha_Producao,
+      COALESCE(C2.QuantidadeTotal, 0) AS QuantidadeTotal_Encomenda_Venda,
+      COALESCE(C1.QuantidadeTotal, 0) - COALESCE(C2.QuantidadeTotal, 0) AS Diferenca
+FROM (
+    SELECT
+        FP.ID_Equip,
+        FP.ID_Armazem,
+        SUM(FP.Quantidade) AS QuantidadeTotal
+    FROM
+        Ficha_Producao FP
+    GROUP BY
+        FP.ID_Equip,
+        FP.ID_Armazem
+) AS C1
+FULL OUTER JOIN (
+    SELECT
+        EEV.ID_Equipamento,
+        EEV.ID_Armazem,
+        SUM(EEV.Quantidade) AS QuantidadeTotal
+    FROM
+        Equipamentos_Encomenda_Venda EEV
+    GROUP BY
+        EEV.ID_Equipamento,
+        EEV.ID_Armazem
+) AS C2 ON C1.ID_Equip = C2.ID_Equipamento AND C1.ID_Armazem = C2.ID_Armazem
+LEFT JOIN Armazens A1 ON C1.ID_Armazem = A1.ID_Armazem
+LEFT JOIN Equipamentos E ON C1.ID_Equip = E.ID_Equip
+LEFT JOIN Tipo_Equipamento TE ON E.Tipo_Equipamento = TE.ID_Tipo_Equipamento
+ORDER BY
+    Nome, Localizacao_Armazem;
+    
+CREATE OR REPLACE VIEW VIEW_stocks_read_componentes AS
+SELECT
+    C1.ID_Armazem,
+    A1.Localizacao AS Localizacao_Armazem_Guia_Compra,
+    C1.ID_Comp,
+    Co1.Nome AS Nome_Componente_Guia_Compra,
+    Co1.Descricao AS Descricao_Componente_Guia_Compra,
+    F1.Nome AS Nome_Fornecedor_Guia_Compra,
+    COALESCE(C1.QuantidadeTotal, 0) AS QuantidadeTotal_Guia_Compra,
+    COALESCE(C2.QuantidadeTotal, 0) AS QuantidadeTotal_Ficha_Producao,
+    COALESCE(C1.QuantidadeTotal, 0) - COALESCE(C2.QuantidadeTotal, 0) AS Diferenca,
+    F1.ID_Fornecedor
+FROM (
+    SELECT
+        CGRC.ID_Comp,
+        CGRC.ID_Armazem,
+        SUM(CGRC.Quantidade) AS QuantidadeTotal
+    FROM
+        Componentes_Guia_Remessa_Compra CGRC
+    GROUP BY
+        CGRC.ID_Comp,
+        CGRC.ID_Armazem
+) AS C1
+FULL OUTER JOIN (
+    SELECT
+        CFP.ID_Comp,
+        CFP.ID_Armazem,
+        SUM(CFP.Quantidade) AS QuantidadeTotal
+    FROM
+        Componentes_Ficha_Producao CFP
+    GROUP BY
+        CFP.ID_Comp,
+        CFP.ID_Armazem
+) AS C2 ON C1.ID_Comp = C2.ID_Comp AND C1.ID_Armazem = C2.ID_Armazem
+LEFT JOIN Armazens A1 ON C1.ID_Armazem = A1.ID_Armazem
+LEFT JOIN Componentes Co1 ON C1.ID_Comp = Co1.ID_Comp
+LEFT JOIN Fornecedores F1 ON Co1.ID_Fornecedor = F1.ID_Fornecedor
+ORDER BY
+	Nome_Componente_Guia_Compra, Localizacao_Armazem_Guia_Compra;
+    
+CREATE OR REPLACE FUNCTION atualizar_estado_encomenda_venda() RETURNS TRIGGER AS $$
+DECLARE
+    equipamento_id INT;
+    quantidade_encomenda INT;
+    quantidade_guia_remessa INT;
+BEGIN
+    -- Criar tabela temporária para armazenar a soma das quantidades de equipamentos_guia_remessa_venda
+    CREATE TEMPORARY TABLE temp_quantidade_guia AS
+    SELECT ID_Equipamento, SUM(Quantidade) AS quantidade
+    FROM Equipamentos_Guia_Remessa_Venda
+    WHERE ID_Remessa_Venda IN (
+        SELECT ID_Remessa_Venda
+        FROM Guia_Remessa_Venda
+        WHERE ID_Enc_Venda = (SELECT ID_Enc_Venda FROM Guia_Remessa_Venda WHERE ID_Remessa_Venda = NEW.ID_Remessa_Venda)
+    )
+    GROUP BY ID_Equipamento;
+
+    -- Criar tabela temporária para armazenar a soma das quantidades de equipamentos_encomenda_venda
+    CREATE TEMPORARY TABLE temp_quantidade_encomenda AS
+    SELECT ID_Equipamento, SUM(Quantidade) AS quantidade
+    FROM Equipamentos_Encomenda_Venda
+    WHERE ID_Enc_Venda = (SELECT ID_Enc_Venda FROM Guia_Remessa_Venda WHERE ID_Remessa_Venda = NEW.ID_Remessa_Venda)
+    GROUP BY ID_Equipamento;
+
+    -- Iterar sobre equipamentos_encomenda_venda
+    FOR equipamento_id IN (SELECT DISTINCT ID_Equipamento FROM Equipamentos_Encomenda_Venda WHERE ID_Enc_Venda = (SELECT ID_Enc_Venda FROM Guia_Remessa_Venda WHERE ID_Remessa_Venda = NEW.ID_Remessa_Venda))
+    LOOP
+        -- Obter a quantidade do equipamento na encomenda
+        SELECT quantidade FROM temp_quantidade_encomenda INTO quantidade_encomenda WHERE ID_Equipamento = equipamento_id;
+
+        -- Obter a quantidade do equipamento nos guias de remessa
+        SELECT quantidade FROM temp_quantidade_guia INTO quantidade_guia_remessa WHERE ID_Equipamento = equipamento_id;
+
+        -- Verificar se a quantidade do equipamento foi entregue
+        IF quantidade_guia_remessa < quantidade_encomenda THEN
+            -- Alguma quantidade de equipamento_guia_remessa_venda é menor que a de equipamentos_encomenda_venda
+            DROP TABLE IF EXISTS temp_quantidade_guia;
+            DROP TABLE IF EXISTS temp_quantidade_encomenda;
+            RETURN NEW;
+        END IF;
+    END LOOP;
+
+    -- Todos os equipamentos atingem ou excedem as quantidades
+    UPDATE Encomenda_Venda
+    SET Estado = 'Concluída'
+    WHERE ID_Enc_Venda = (SELECT ID_Enc_Venda FROM Guia_Remessa_Venda WHERE ID_Remessa_Venda = NEW.ID_Remessa_Venda);
+
+    -- Limpar tabelas temporárias (opcional)
+    DROP TABLE IF EXISTS temp_quantidade_guia;
+    DROP TABLE IF EXISTS temp_quantidade_encomenda;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER sp_atualizar_estado_encomenda_venda
+AFTER INSERT OR UPDATE ON Equipamentos_Guia_Remessa_Venda
+FOR EACH ROW
+EXECUTE FUNCTION atualizar_estado_encomenda_venda();
+
+	CREATE OR REPLACE FUNCTION atualizar_estado_encomenda_compra() RETURNS TRIGGER AS $$
+DECLARE
+    componente_id INT;
+    quantidade_encomenda INT;
+    quantidade_guia_remessa INT;
+BEGIN
+    -- Criar tabela temporária para armazenar a soma das quantidades de componentes_guia_remessa_compra
+    CREATE TEMPORARY TABLE temp_quantidade_guia AS
+    SELECT ID_Comp, SUM(Quantidade) AS quantidade
+    FROM Componentes_Guia_Remessa_Compra
+    WHERE ID_Remessa_compra IN (
+        SELECT ID_Remessa_compra
+        FROM Guia_Remessa_Compra
+        WHERE ID_Enc_compra = (SELECT ID_Enc_compra FROM Guia_Remessa_Compra WHERE ID_Remessa_compra = NEW.ID_Remessa_compra)
+    )
+    GROUP BY ID_Comp;
+
+    -- Criar tabela temporária para armazenar a soma das quantidades de componentes_encomenda_compra
+    CREATE TEMPORARY TABLE temp_quantidade_encomenda AS
+    SELECT ID_Comp, SUM(Quantidade) AS quantidade
+    FROM Componentes_Encomenda_Compra
+    WHERE ID_Enc_compra = (SELECT ID_Enc_compra FROM Guia_Remessa_Compra WHERE ID_Remessa_compra = NEW.ID_Remessa_compra)
+    GROUP BY ID_Comp;
+
+    -- Iterar sobre componentes_encomenda_compra
+    FOR componente_id IN (SELECT DISTINCT ID_Comp FROM Componentes_Encomenda_Compra WHERE ID_Enc_compra = (SELECT ID_Enc_compra FROM Guia_Remessa_Compra WHERE ID_Remessa_compra = NEW.ID_Remessa_compra))
+    LOOP
+        -- Obter a quantidade do componente na encomenda
+        SELECT quantidade FROM temp_quantidade_encomenda INTO quantidade_encomenda WHERE ID_Comp = componente_id;
+
+        -- Obter a quantidade do componente nos guias de remessa
+        SELECT quantidade FROM temp_quantidade_guia INTO quantidade_guia_remessa WHERE ID_Comp = componente_id;
+
+        -- Verificar se a quantidade do componente foi entregue
+        IF quantidade_guia_remessa < quantidade_encomenda THEN
+            -- Alguma quantidade de componente_guia_remessa_compra é menor que a de componentes_encomenda_compra
+            DROP TABLE IF EXISTS temp_quantidade_guia;
+            DROP TABLE IF EXISTS temp_quantidade_encomenda;
+            RETURN NEW;
+        END IF;
+    END LOOP;
+
+    -- Todos os componentes atingem ou excedem as quantidades
+    UPDATE Encomenda_Compra
+    SET Estado = 'Concluída'
+    WHERE ID_Enc_compra = (SELECT ID_Enc_compra FROM Guia_Remessa_Compra WHERE ID_Remessa_compra = NEW.ID_Remessa_compra);
+
+    -- Limpar tabelas temporárias (opcional)
+    DROP TABLE IF EXISTS temp_quantidade_guia;
+    DROP TABLE IF EXISTS temp_quantidade_encomenda;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER sp_atualizar_estado_encomenda_compra
+AFTER INSERT OR UPDATE ON Componentes_Guia_Remessa_Compra
+FOR EACH ROW
+EXECUTE FUNCTION atualizar_estado_encomenda_compra();
+
+CREATE OR REPLACE FUNCTION check_user(username_param VARCHAR(50), password_param VARCHAR(100))
+RETURNS BOOLEAN AS
+$$
+DECLARE
+    user_exists BOOLEAN;
+BEGIN
+    SELECT EXISTS (
+        SELECT 1
+        FROM Utilizadores
+        WHERE Username = username_param AND Password = password_param
+    ) INTO user_exists;
+
+    RETURN user_exists;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_user_id(username_param VARCHAR(50))
+RETURNS INT AS
+$$
+DECLARE
+    user_id INT;
+BEGIN
+    SELECT ID_Utilizador INTO user_id
+    FROM Utilizadores
+    WHERE Username = username_param;
+
+    IF user_id IS NOT NULL THEN
+        RETURN user_id;
+    ELSE
+        RETURN NULL; -- Return NULL if user is not found
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_idperfil_by_username(username_param int)
+RETURNS INT AS
+$$
+DECLARE
+    perfil_id INT;
+BEGIN
+    SELECT Permissoes INTO perfil_id
+    FROM Utilizadores U
+    JOIN   
+        Perfil P ON P.ID_Perfil = U.ID_Perfil
+    WHERE ID_Utilizador = username_param;
+    RETURN COALESCE(perfil_id, 0);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE PROCEDURE sp_encomenda_venda_create(
+    IN p_id_utilizador INT,
+    IN p_id_cliente INT,
+    OUT p_id_enc_venda INT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    next_id_enc_venda INT;
+BEGIN
+    SELECT nextval('encomenda_venda_id_enc_venda_seq') INTO next_id_enc_venda;
+
+    INSERT INTO encomenda_venda (ID_Enc_Venda, ID_Utilizador , ID_Cliente , Estado , Data )
+    VALUES (next_id_enc_venda, p_id_utilizador, p_id_cliente, 'Pendente' ,CURRENT_DATE)
+    RETURNING ID_Enc_Venda INTO p_id_enc_venda;
+    -- Pode adicionar tratamento de erro ou retorno de status, se necessário
+END $$;
+
+CREATE OR REPLACE PROCEDURE sp_encomenda_venda_update(
+    IN p_id_enc_venda INT,
+    IN p_estado VARCHAR(255),
+    IN p_data DATE,
+    IN p_id_utilizador INT,
+    IN p_id_cliente INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE encomenda_venda
+    SET estado = p_estado,
+        data = p_data,
+        id_utilizador = p_id_utilizador,
+        ID_Cliente = p_id_cliente
+    WHERE id_enc_venda = p_id_enc_venda;
+
+    -- Pode adicionar tratamento de erro ou retorno de status, se necessário
+END $$;
+
+-- Função para ler todas as encomendas de compra
+CREATE OR REPLACE FUNCTION fn_encomenda_venda_READALL()
+RETURNS SETOF encomenda_venda AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM encomenda_venda;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para ler uma encomenda de compra por ID
+CREATE OR REPLACE FUNCTION fn_encomenda_venda_READ(p_id_enc_venda INT)
+RETURNS SETOF encomenda_venda AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM encomenda_venda WHERE id_enc_venda = p_id_enc_venda;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE PROCEDURE sp_encomenda_venda_delete(
+    IN p_id_enc_venda INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM encomenda_venda
+    WHERE id_enc_venda = p_id_enc_venda;
+
+    -- Pode adicionar tratamento de erro ou retorno de status, se necessário
+END $$;
+
+-- Procedure to create a new Guia Remessa Compra
+CREATE OR REPLACE PROCEDURE sp_guia_remessa_compra_create(
+    IN p_id_enc_compra INT,
+    IN p_nif VARCHAR(20),
+    OUT p_id_guia_compra INT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    next_id_guia_compra INT;
+BEGIN
+    SELECT nextval('guia_remessa_compra_id_remessa_compra_seq') INTO next_id_guia_compra;
+
+    INSERT INTO guia_remessa_compra (ID_Remessa_compra, id_enc_compra, data, nif)
+    VALUES (next_id_guia_compra, p_id_enc_compra, CURRENT_DATE, p_nif)
+    RETURNING ID_Remessa_compra INTO p_id_guia_compra;
+END $$;
+
+-- Procedure to update an existing Guia Remessa Compra
+CREATE OR REPLACE PROCEDURE sp_guia_remessa_compra_update(
+    IN p_id_remessa_compra INT,
+    IN p_id_enc_compra INT,
+    IN p_data DATE,
+    IN p_nif VARCHAR(20)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE guia_remessa_compra
+    SET id_enc_compra = p_id_enc_compra,
+        data = p_data,
+        nif = p_nif
+    WHERE id_remessa_compra = p_id_remessa_compra;
+
+    -- You can add error handling or status return if necessary
+END $$;
+
+CREATE OR REPLACE FUNCTION atualizar_equipamento(
+    p_id_equipamento INT,
+    p_nome VARCHAR(255),
+    p_descricao VARCHAR(255),
+    p_preco_venda DECIMAL,
+    p_tipo_equipamento INT
+)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE Equipamentos
+    SET
+        Nome = p_nome,
+        Descricao = p_descricao,
+        Preco_Venda = p_preco_venda,
+        Tipo_Equipamento = p_tipo_equipamento
+    WHERE
+        ID_Equip = p_id_equipamento;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Procedure to delete a Guia Remessa Compra by ID
+CREATE OR REPLACE PROCEDURE sp_guia_remessa_compra_delete(
+    IN p_id_remessa_compra INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM guia_remessa_compra
+    WHERE id_remessa_compra = p_id_remessa_compra;
+
+    -- You can add error handling or status return if necessary
+END $$;
+
+-- Function to read all Guia Remessa Compra entries
+CREATE OR REPLACE FUNCTION fn_guia_remessa_compra_readall()
+RETURNS SETOF guia_remessa_compra AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM guia_remessa_compra;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to read a specific Guia Remessa Compra by ID_Enc_compra
+CREATE OR REPLACE FUNCTION fn_guia_remessa_compra_read(p_id_enc_compra INT)
+RETURNS SETOF guia_remessa_compra AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM guia_remessa_compra WHERE id_enc_compra = p_id_enc_compra;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION exportar_encomenda_compra_xml(p_encomenda_id INT)
+RETURNS XML
+AS $$
+DECLARE
+    xml_content XML;
+BEGIN
+    SELECT
+        XMLELEMENT(
+            NAME "encomenda_compra",
+            	XMLELEMENT(NAME "ID_Enc_compra", ec.ID_Enc_compra),
+                XMLELEMENT(NAME "Estado", ec.Estado),
+                XMLELEMENT(NAME "Data", ec.Data),
+                XMLELEMENT(NAME "NIF", ''),
+                XMLELEMENT(
+                    NAME "Utilizador",
+                    XMLELEMENT(NAME "ID_Utilizador", u.ID_Utilizador),
+                    XMLELEMENT(NAME "Nome", u.Nome)
+                ),
+                XMLELEMENT(
+                    NAME "Fornecedor",
+                    XMLELEMENT(NAME "ID_Fornecedor", f.ID_Fornecedor),
+                    XMLELEMENT(NAME "Nome", f.Nome)
+                ),
+                XMLELEMENT(
+                    NAME "componentes",
+                    -- Subconsulta para obter todos os componentes relacionados à encomenda
+                    (SELECT XMLAGG(
+                        XMLELEMENT(
+                            NAME "componente",
+                            XMLELEMENT(NAME "ID_Comp", c.ID_Comp),
+                            XMLELEMENT(NAME "Nome", c.Nome),
+                            XMLELEMENT(NAME "Preco", cec.Preco),
+                            XMLELEMENT(NAME "Quantidade", cec.Quantidade),
+                            XMLELEMENT(NAME "ID_Armazem", '')
+                        )
+                    ) FROM componentes_encomenda_compra cec
+                    INNER JOIN componentes c ON cec.ID_Comp = c.ID_Comp
+                    WHERE cec.ID_Enc_compra = ec.ID_Enc_compra)
+            )
+        )
+    INTO xml_content
+    FROM
+        encomenda_compra ec
+        INNER JOIN utilizadores u ON ec.ID_Utilizador = u.ID_Utilizador
+        INNER JOIN fornecedores f ON ec.ID_Fornecedor = f.ID_Fornecedor
+    WHERE
+        ec.ID_Enc_compra = p_encomenda_id;
+
+    RETURN xml_content;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_nome_tipo_equipamento(p_id_tipo_equipamento INTEGER) RETURNS VARCHAR AS
+$$
+DECLARE
+    nome_tipo VARCHAR;
+BEGIN
+    SELECT tipo INTO nome_tipo
+    FROM tipo_equipamento t
+    WHERE t.id_tipo_equipamento = p_id_tipo_equipamento;
+
+    -- If the type doesn't exist, set nome_tipo to NULL
+    IF NOT FOUND THEN
+        nome_tipo := NULL;
+    END IF;
+
+    RETURN nome_tipo;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE VIEW View_Encomendas_Compras AS
+SELECT 
+    EC.ID_Enc_compra,
+    EC.Estado,
+    EC.Data,
+    U.Nome AS Nome_Utilizador,
+    F.Nome AS Nome_Fornecedor,
+    U.ID_Utilizador,
+	F.ID_Fornecedor
+FROM 
+    Encomenda_Compra EC
+JOIN 
+    Utilizadores U ON EC.ID_Utilizador = U.ID_Utilizador
+JOIN 
+    Fornecedores F ON EC.ID_Fornecedor = F.ID_Fornecedor
+ORDER BY
+    EC.ID_Enc_compra;
+
+CREATE OR REPLACE VIEW View_Encomendas_Vendas AS
+SELECT 
+    EV.ID_Enc_Venda,
+    EV.Estado,
+    EV.Data,
+    U.Nome AS Nome_Utilizador,
+    C.Nome AS Nome_Cliente,
+    U.ID_Utilizador,
+	C.ID_Cliente
+FROM 
+    Encomenda_Venda EV
+JOIN 
+    Utilizadores U ON EV.ID_Utilizador = U.ID_Utilizador
+JOIN 
+    Clientes C ON EV.ID_Cliente = C.ID_Cliente
+ORDER BY
+    EV.ID_Enc_Venda;
+
+CREATE OR REPLACE VIEW View_Componentes_Encomenda_Compra AS
+SELECT 
+    CEC.ID_Componentes_Encomenda_Compra,
+    CEC.ID_Enc_compra,
+    CEC.ID_Comp,
+    Co.Nome AS Nome_Componente,
+    CEC.Preco,
+    CEC.Quantidade
+FROM 
+    Componentes_Encomenda_Compra CEC
+JOIN 
+    Componentes Co ON CEC.ID_Comp = Co.ID_Comp
+ORDER BY
+	CEC.ID_Comp;
+
+
+CREATE OR REPLACE VIEW View_Guias_e_Componentes_Compras AS
+SELECT 
+	GRC.ID_Remessa_compra,
+    GRC.ID_Enc_compra,
+    GRC.Data,
+    GRC.NIF,
+    CoGR.ID_Componentes_Guia_Remessa_Compra,
+    CoGR.ID_Comp,
+    Co.Nome AS Nome_Componente,
+    CoGR.Quantidade,
+    A.Localizacao AS Localizacao_Armazem
+FROM
+    Guia_Remessa_Compra GRC
+JOIN 
+    Componentes_Guia_Remessa_Compra CoGR ON GRC.ID_Remessa_compra = CoGR.ID_Remessa_compra
+JOIN 
+    Componentes Co ON CoGR.ID_Comp = Co.ID_Comp
+JOIN 
+    Armazens A ON CoGR.ID_Armazem = A.ID_Armazem
+GROUP BY 
+    GRC.ID_Remessa_compra, GRC.ID_Enc_compra, GRC.Data, GRC.NIF, CoGR.ID_Componentes_Guia_Remessa_Compra, CoGR.ID_Comp, Co.Nome, CoGR.Quantidade, A.Localizacao
+ORDER BY
+	GRC.ID_Enc_compra;
+
+CREATE OR REPLACE VIEW View_Componentes_Fornecedores AS
+SELECT 
+    C.ID_Comp,
+    C.Descricao AS Descricao_Componente,
+    C.Nome AS Nome_Componente,
+    F.ID_Fornecedor,
+    F.Nome AS Nome_Fornecedor
+FROM 
+    Componentes C 
+JOIN 
+    Fornecedores F ON F.ID_Fornecedor = C.ID_Fornecedor
+ORDER BY 
+    C.ID_Comp;
+    
+CREATE OR REPLACE VIEW View_Utilizador_Perfil AS
+SELECT 
+    U.ID_Utilizador,
+    U.Username,
+    U.Nome,
+    U.Email,
+    U.Contacto,
+	U.ID_Perfil,
+    P.Perfil AS Nome_Perfil,
+	U.Password
+FROM 
+    Utilizadores U
+JOIN 
+    Perfil P ON U.ID_Perfil = P.ID_Perfil
+ORDER BY
+    U.ID_Utilizador;
+
+CREATE OR REPLACE PROCEDURE sp_ficha_producao_create(
+    IN p_ID_Equip INT,
+    IN p_ID_Mao_Obra INT,
+    IN p_ID_Utilizador INT,
+    IN p_Data_Hora_Inicio TIMESTAMP,
+    IN p_Data_Hora_Fim TIMESTAMP,
+    IN p_Quantidade INT,
+    IN p_ID_Armazem INT,
+    OUT p_id_ficha_producao INT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    next_id_ficha_producao INT;
+BEGIN
+    SELECT nextval('ficha_producao_id_ficha_prod_seq') INTO next_id_ficha_producao;
+
+    INSERT INTO Ficha_Producao (ID_Ficha_prod, ID_Equip, ID_Mao_Obra, ID_Utilizador, Data_Hora_Inicio, Data_Hora_Fim, Quantidade, ID_Armazem)
+    VALUES (next_id_ficha_producao, p_ID_Equip, p_ID_Mao_Obra, p_ID_Utilizador, p_Data_Hora_Inicio, p_Data_Hora_Fim, p_Quantidade, p_ID_Armazem)
+    RETURNING ID_Ficha_prod INTO p_id_ficha_producao;
+END $$;
+
+-- Função para ler todas as fichas produção
+CREATE OR REPLACE FUNCTION fn_ficha_producao_READALL()
+RETURNS SETOF Ficha_Producao AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Ficha_Producao;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para ler uma ficha produção por ID
+CREATE OR REPLACE FUNCTION fn_ficha_producao_READ(p_ID_Ficha_prod INT)
+RETURNS SETOF Ficha_Producao AS $$
+BEGIN
+    RETURN QUERY SELECT * FROM Ficha_Producao WHERE ID_Ficha_prod = p_ID_Ficha_prod;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE PROCEDURE sp_ficha_producao_delete(
+    IN p_ID_Ficha_prod INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM Ficha_Producao
+    WHERE ID_Ficha_prod = p_ID_Ficha_prod;
+
+    -- Pode adicionar tratamento de erro ou retorno de status, se necessário
+END $$;
+
+CREATE OR REPLACE VIEW View_FichasProducao_Equipamentos AS
+SELECT
+    FP.ID_Ficha_prod,
+    FP.ID_Equip,
+    FP.ID_Mao_Obra,
+	MO.Tipo AS Tipo_Mao_Obra,
+    MO.Custo AS Custo_Mao_Obra,
+    FP.ID_Utilizador,
+    FP.Data_Hora_Inicio,
+    FP.Data_Hora_Fim,
+    FP.Quantidade AS Ficha_Quantidade,
+    A.Localizacao AS Ficha_Armazem_Localizacao,  -- Include Localizacao for Ficha_Armazem
+    CF.ID_Comp_Fich,
+    CF.ID_Comp,
+	C.Descricao AS Descricao_Componente,
+    C.Nome AS Nome_Componente,
+    C.ID_Fornecedor AS ID_Fornecedor_Componente,
+    CF.Quantidade AS Componente_Quantidade,
+    A_Componente.Localizacao AS Componente_Armazem_Localizacao,  -- Include Localizacao for Componente_Armazem
+    U.Nome AS Nome_Utilizador
+FROM
+    Ficha_Producao FP
+JOIN
+    Componentes_Ficha_Producao CF ON FP.ID_Ficha_prod = CF.ID_Ficha_prod
+JOIN 
+	Mao_Obra MO ON FP.ID_Mao_Obra = MO.ID_Mao_Obra
+JOIN
+    Componentes C ON CF.ID_Comp = C.ID_Comp
+JOIN
+    Utilizadores U ON FP.ID_Utilizador = U.ID_Utilizador
+JOIN
+    Armazens A ON FP.ID_Armazem = A.ID_Armazem  -- Assuming the column name for Ficha_Armazem is ID_Armazem in the Ficha_Producao table
+JOIN
+    Armazens A_Componente ON CF.ID_Armazem = A_Componente.ID_Armazem  -- Assuming the column name for Componente_Armazem is ID_Armazem in the Componentes_Ficha_Producao table
+ORDER BY
+    FP.ID_Ficha_prod;
+
+
+CREATE OR REPLACE VIEW View_Equipamentos_Encomenda_Venda AS
+SELECT 
+	EEV.ID_Equipamentos_Encomenda_Venda,
+	EEV.ID_Enc_Venda,
+	EEV.ID_Equipamento,
+	E.Nome AS Nome_Equipamento,
+	EEV.Preco_Total,
+	EEV.Quantidade,
+	A.Localizacao
+FROM
+	Equipamentos_Encomenda_Venda EEV
+JOIN
+	Equipamentos E ON E.ID_Equip = EEV.ID_Equipamento 
+JOIN
+	Armazens A ON A.ID_Armazem = EEV.ID_Armazem
+ORDER BY
+	EEV.ID_Equipamento;
+
+CREATE OR REPLACE VIEW View_Guias_e_Equipamentos_Vendas AS
+SELECT
+	GRV.ID_Remessa_Venda,
+	GRV.ID_Enc_Venda,
+	GRV.Data,
+	GRV.NIF,
+	EGRV.ID_Equipamento_Guia_Remessa_Venda,
+	EGRV.ID_Equipamento,
+	E.Nome,
+	EGRV.Quantidade,
+	EGRV.MoradaDestino
+FROM
+	Guia_Remessa_Venda GRV
+JOIN
+	Equipamentos_Guia_Remessa_Venda EGRV ON EGRV.ID_Remessa_Venda = GRV.ID_Remessa_Venda
+JOIN
+	Equipamentos E ON E.ID_Equip = EGRV.ID_Equipamento
+GROUP BY
+    GRV.ID_Remessa_Venda, GRV.ID_Enc_Venda, GRV.Data, GRV.NIF, EGRV.ID_Equipamento_Guia_Remessa_Venda, EGRV.ID_Equipamento, E.Nome, EGRV.Quantidade, EGRV.MoradaDestino
+ORDER BY
+    GRV.ID_Enc_Venda;
+
+CREATE OR REPLACE FUNCTION exportar_encomenda_venda_xml(p_encomenda_id INT)
+RETURNS XML
+AS $$
+DECLARE
+    xml_content XML;
+BEGIN
+    SELECT
+        XMLELEMENT(
+            NAME "encomenda_venda",
+                XMLELEMENT(NAME "ID_Enc_Venda", ev.ID_Enc_Venda),
+                XMLELEMENT(NAME "Estado", ev.Estado),
+                XMLELEMENT(NAME "Data", ev.Data),
+                XMLELEMENT(
+                    NAME "Utilizador",
+                    XMLELEMENT(NAME "ID_Utilizador", u.ID_Utilizador),
+                    XMLELEMENT(NAME "Nome", u.Nome)
+                ),
+                XMLELEMENT(
+                    NAME "Cliente",
+                    XMLELEMENT(NAME "ID_Cliente", c.ID_Cliente),
+                    XMLELEMENT(NAME "Nome", c.Nome),
+                    XMLELEMENT(NAME "Morada", c.Morada),
+                    XMLELEMENT(NAME "Contacto", c.Contacto),
+                    XMLELEMENT(NAME "NIF", c.NIF)
+                ),
+                XMLELEMENT(
+                    NAME "equipamentos",
+                    -- Subconsulta para obter todos os equipamentos relacionados à encomenda
+                    (SELECT XMLAGG(
+                        XMLELEMENT(
+                            NAME "equipamento",
+                            XMLELEMENT(NAME "ID_Equipamento_Encomenda_Venda", eev.ID_Equipamentos_Encomenda_Venda),
+                            XMLELEMENT(NAME "ID_Equipamento", eev.ID_Equipamento),
+                            XMLELEMENT(NAME "Preco_Total", eev.Preco_Total),
+                            XMLELEMENT(NAME "Quantidade", eev.Quantidade),
+                            XMLELEMENT(
+                                NAME "Armazem",
+                                XMLELEMENT(NAME "ID_Armazem", a.ID_Armazem),
+                                XMLELEMENT(NAME "Nome", a.Localizacao)
+                            )
+                        )
+                    ) FROM equipamentos_encomenda_venda eev
+                    INNER JOIN armazens a ON eev.ID_Armazem = a.ID_Armazem
+                    WHERE eev.ID_Enc_Venda = ev.ID_Enc_Venda)
+		)
+            )
+    INTO xml_content
+    FROM
+        encomenda_venda ev
+        INNER JOIN utilizadores u ON ev.ID_Utilizador = u.ID_Utilizador
+        INNER JOIN clientes c ON ev.ID_Cliente = c.ID_Cliente
+    WHERE
+        ev.ID_Enc_Venda = p_encomenda_id;
+
+    RETURN xml_content;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION fn_guiavenda_importar_xml(xml_data xml)
+RETURNS void AS $$
+DECLARE
+    id_guia INTEGER;
+    componentes_encomenda_venda INTEGER[];
+    equipamento xml;
+    p_id_enc_venda INT;
+    equip_morada TEXT;
+
+BEGIN
+    SELECT (xpath('/encomenda_venda/ID_Enc_Venda/text()', xml_data))[1]::text::int INTO p_id_enc_venda;
+    SELECT (xpath('/encomenda_venda//Cliente/Morada/text()', xml_data))[1]::text INTO equip_morada;
+
+    -- Chama o procedimento para criar o guia remessa de venda e captura o valor retornado
+    CALL sp_guia_remessa_venda_create(
+        p_id_enc_venda,
+        (xpath('/encomenda_venda/Cliente/NIF/text()', xml_data))[1]::text,
+        id_guia
+    );
+    
+    IF id_guia IS NOT NULL THEN
+        -- Seleciona os IDs de equipamentos relacionados à encomenda de venda
+        SELECT ARRAY(
+            SELECT DISTINCT ID_Equipamento 
+            FROM Equipamentos_Encomenda_Venda 
+            WHERE ID_Enc_Venda = p_id_enc_venda
+        ) INTO componentes_encomenda_venda;
+     
+        -- Itera através dos elementos do XML e chama o procedimento para criar os equipamentos no guia de remessa de venda
+        FOR equipamento IN SELECT unnest(xpath('/encomenda_venda//equipamentos/equipamento', xml_data)) LOOP
+            DECLARE
+                equip_id INT;
+                equip_quantidade INT;
+            BEGIN
+                SELECT (xpath('//ID_Equipamento/text()', equipamento))[1]::text::int INTO equip_id;
+                SELECT (xpath('//Quantidade/text()', equipamento))[1]::text::int INTO equip_quantidade;
+				IF equip_id = ANY(componentes_encomenda_venda) THEN
+                    -- Calling the procedure to create the component in guia remessa compra
+                    CALL sp_Equipamentos_Guia_Remessa_Venda_CREATE(
+                        id_guia,
+                        equip_id,
+                        equip_quantidade,
+                        equip_morada
+                    );
+                END IF;
+            EXCEPTION
+                WHEN OTHERS THEN
+                    -- Handling the situation where a value is missing or invalid in the XML
+                    RAISE NOTICE 'Error processing component: %', SQLERRM;
+            END;
+        END LOOP;
+    ELSE
+        RAISE EXCEPTION 'ID of guia remessa venda was not returned.';
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION fn_guiacompra_importar_xml(xml_data xml)
+RETURNS void AS $$
+DECLARE
+    id_guia INTEGER;
+    componentes_encomenda_compra INTEGER[];
+    component xml;
+    p_id_enc_compra INT;
+BEGIN
+
+    -- Extracting ID_Enc_compra from XML
+    SELECT (xpath('/encomenda_compra/ID_Enc_compra/text()', xml_data))[1]::text::int INTO p_id_enc_compra;
+
+    -- Calling procedure to create guia remessa compra
+    CALL sp_guia_remessa_compra_create(
+        p_id_enc_compra,
+        (xpath('/encomenda_compra/NIF/text()', xml_data))[1]::text,
+        id_guia
+    );
+
+    IF id_guia IS NOT NULL THEN
+        -- Selecting IDs of components related to the encomenda
+        SELECT ARRAY(
+            SELECT DISTINCT ID_Comp
+            FROM Componentes_Encomenda_Compra 
+            WHERE ID_Enc_compra = p_id_enc_compra
+        ) INTO componentes_encomenda_compra;
+
+        -- Iterating through XML components and calling the procedure to create components
+        FOR component IN SELECT unnest(xpath('/encomenda_compra//componentes/componente', xml_data)) LOOP
+            -- Extracting values from the XML component
+            DECLARE
+                comp_id INT;
+                comp_quantidade INT;
+                comp_armazem INT;
+            BEGIN
+                comp_id := (xpath('//ID_Comp/text()', component))[1]::text::int;
+                comp_quantidade := (xpath('//Quantidade/text()', component))[1]::text::int;
+                comp_armazem := (xpath('//ID_Armazem/text()', component))[1]::text::int;
+
+
+                -- Checking if comp_id is in the list of components from encomenda
+                IF comp_id = ANY(componentes_encomenda_compra) THEN
+                    -- Calling the procedure to create the component in guia remessa compra
+                    CALL sp_Componentes_Guia_Remessa_Compra_CREATE(
+                        id_guia,
+                        comp_id,
+                        comp_quantidade,
+                        comp_armazem
+                    );
+                END IF;
+            EXCEPTION
+                WHEN OTHERS THEN
+                    -- Handling the situation where a value is missing or invalid in the XML
+                    RAISE NOTICE 'Error processing component: %', SQLERRM;
+            END;
+        END LOOP;
+    ELSE
+        RAISE EXCEPTION 'ID of guia remessa compra was not returned.';
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;

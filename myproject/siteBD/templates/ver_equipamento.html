@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <title>Equipamento</title>
+    <style>
+        .container {
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    {% include 'navbar.html' %}
+
+    <div style="margin-left: 32px; margin-right: 32px; margin-top: 32px">
+        <div class="row">
+            <div class="col-6">
+        <div id="prod">        
+            <div class="col-12">
+                <h1>Detalhes do Equipamento</h1>
+                {% for equipamento in detalhes %}
+                    <h2 class="text-danger mt-2">{{ equipamento.3 }}€</h2>
+                    <div>
+                        <strong>{{ equipamento.1 }} <br>
+                            <p class="text-secondary">{{ tipo}}</p>
+                        </strong>
+                        <hr>
+                        <strong>Descrição: </strong>
+                        <p>{{ equipamento.2 }}</p>
+                        <hr>
+                    </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+<div class="col-6">
+    <H1>Atributos</H1>
+    {% for atributo in atributos %}
+        <ul style="list-style: none; padding: 0;">
+            {% for key, value in atributo.items %}
+                <li>{{ key }}: {{ value }}</li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+</div>
+</div>
+
+    <div id="fichasprod">
+    <h1>Fichas de Produção do equipamento</h1>
+        {% for ficha_id, ficha_data in dados_agrupados.items %}
+    {% with i=forloop.counter %}
+    <table class="table table-bordered table-striped text-center mt-0 mb-0">
+            <!-- Header for the Ficha_Producao data -->
+            <thead class="text-center table-dark">
+                <tr>
+                    <th style="width: 18%;">Quantidade</th>
+                    <th style="width: 18%;">Armazém</th>
+                    <th style="width: 18%;">utilizador</th>
+                </tr>
+                
+                <!-- Header for the Componentes data -->
+                <tr class="text-center table-light text-dark">
+                    <th style="width: 18%;">{{ficha_data.ficha.8}}</th>
+                    <th style="width: 18%;">{{ficha_data.ficha.9}}</th>
+                    <th style="width: 18%;">{{ficha_data.ficha.17}}</th>
+                </tr>
+
+                <tr class="text-center" style="background-color: grey;">
+                    <th style="width: 5%;"># {{i}}</th>
+                    <th style="width: 18%;">{{ ficha_data.ficha.6 }} - {{ ficha_data.ficha.7 }}</th>
+                    <th style="width: 18%;">{{ficha_data.ficha.3}} </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th style="width: 18%;">Componentes</th>
+                    <th style="width: 18%;">Quantidade</th>
+                    <th style="width: 18%;">Armazém</th>
+                </tr>
+                {% for componente in ficha_data.componentes %}
+                    <!-- Adapt according to the structure of your Componentes data -->
+                    <tr>
+                        <td>{{ componente.Nome_Componente }}</td>
+                        <td>{{ componente.Quantidade }}</td>
+                        <td>{{ componente.Componente_Armazem }}</td>
+                        <!-- Add more columns as needed -->
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3">Sem dados</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <br>
+    {% endwith %}
+{% empty %}
+    <table class="table table-bordered table-striped text-center">
+        <tbody>
+            <tr>
+                <td colspan="12">Sem dados</td>
+            </tr>
+        </tbody>
+    </table>
+{% endfor %}
+</div>    
+ 
+</body>
+</html>

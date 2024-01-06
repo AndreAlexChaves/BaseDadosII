@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8">
+    <title>Encomendar Equipamentos</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <style>
+        .container {
+            padding-top: 20px;
+        }
+        .componente-item {
+            margin-bottom: 5px;
+        }
+        #carrinho {
+            float: right;
+            width: 35%;
+            border: 1px solid #ccc;
+            margin-top: 32px;
+        }
+    </style>
+</head>
+<body>
+    {% include 'navbar.html' %} 
+
+<div class="float-left" style="margin-left: 32px; margin-top: 32px; width: 98%; margin-right: 32px;">
+    <h1>Encomendar Equipamentos</h1>
+    <br>
+    <div id="resultados">
+        <h3>Equipamentos Disponíveis</h3>
+
+        <div id="equipamentos-disponiveis" class="float-left w-50">
+            <table class="table"  style="margin-top: 32px;">
+                <thead class="table-dark">
+                    <tr>
+                        <th>&nbsp;</th>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>Localização</th>
+                        <th>Preço</th>
+                        <th>Stock</th>
+                        <th>&nbsp;</th>
+                    </tr>
+                </thead>
+                <tbody id="componentes-list">
+                    {% for equipamento in equipamentos %}
+                        <tr class="componente-item">
+                            <td>
+                                <button type="submit" class="btn btn-dark btn-sm" data-toggle="modal" data-target="#detalhesModal{{ equipamento.2 }}">
+                                    <div class="eye-icon">&#128065;</div>
+                                </button>
+                            </td>
+                            <td>{{ equipamento.3 }}</td>
+                            <td>{{ equipamento.6 }}</td>
+                            <td>{{ equipamento.1 }}</td>
+                            <td>{{ equipamento.5 }}€</td>
+                            <td>{{ equipamento.9 }} qt</td>
+                            <td class="input-group">
+                                <input type="number" id="quantidade_{{equipamento.2}}_{{equipamento.0}}" class="form-control" value="1" min="1">
+                                <button type="button" data-nome-armazem="{{ equipamento.1 }}" data-preco="{{ equipamento.5 }}" data-id="{{ equipamento.2 }}" data-id-armazem="{{ equipamento.0 }}" data-nome="{{ equipamento.3 }}" class="btn btn-dark btn-sm adicionar">
+                                    Adicionar
+                                </button>
+                            </td>
+                        </tr>          
+                            <!-- detalhesEquipamentoEncomenda.html -->
+                            <div class="modal fade" id="detalhesModal{{ equipamento.2 }}" tabindex="-1" role="dialog" aria-labelledby="detalhesModalLabel{{ equipamento.2 }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="{{ equipamento.2 }}">Detalhes do Equipamento - {{ equipamento.3 }}</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Descrição: {{ equipamento.4 }}</p>
+                                            Atributos:
+                                            {% for atributos in equipamento.10 %}
+                                                <ul>
+                                                    {% for key, value in atributos.items %}
+                                                        <li>{{ key }}: {{ value }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>    
+                    {% empty %}
+                        <tr>
+                            <td colspan="3">Sem Stock de equipamentos</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>      
+        <div id="carrinho"  style="margin-top: 32px; margin-right: 32px; padding: 20px;" class="float-right">
+            <h3><i class="fi fi-rr-shopping-cart"></i> Carrinho:</h3>
+            <ul class="list-unstyled" id="equipamentos-venda-list"></ul>
+            <form method="post" action="{% url 'realizarEncomendaVenda' %}">
+                {% csrf_token %}
+                <input type="hidden" name="equipamentos_venda" id="equipamentos-venda-input" required value="">
+                <div>
+                    <select title="ID_Cliente" class="w-50 form-control" name="ID_Cliente" required id="ID_Cliente">
+                        <option value="">Selecione o Cliente!</option>
+                        {% for cliente in clientes %}
+                        <option value="{{cliente.0}}">{{cliente.1}}</option>
+                        {% empty %}
+                        <option value="">Sem Dados!</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="float-right btn btn-lg btn-dark" id="comprar-btn">
+                        Comprar
+                    </button>
+                </div>
+            </form>
+        </div>  
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        const equipamentosVenda = [];
+        atualizarCarrinho();
+
+        $('.adicionar').on('click', function() {
+            const idEquipamento = $(this).data('id');
+            const idArmazem = $(this).data('id-armazem');
+            const nomeEquipamento = $(this).data('nome');
+            const precoEquipamento = $(this).data('preco');
+            const nomeArmazem = $(this).data('nome-armazem');
+            const quantidadeEquipamento = $(`#quantidade_${idEquipamento}_${idArmazem}`).val();
+            if (!quantidadeEquipamento || quantidadeEquipamento <= 0) 
+                return;
+            const equipamentoExistente = equipamentosVenda.find(equip => equip[0] === idEquipamento && equip[1] === idArmazem);
+            if (equipamentoExistente) {
+                equipamentoExistente[3] += parseInt(quantidadeEquipamento);
+            } else {
+                equipamentosVenda.push([idEquipamento, idArmazem, nomeEquipamento, parseInt(quantidadeEquipamento), parseFloat(precoEquipamento), nomeArmazem]);
+            }
+
+            atualizarCarrinho();
+        });
+
+        function atualizarCarrinho() {
+            $('#equipamentos-venda-list').empty();
+            $('#equipamentos-venda-list').append(`<hr/>`);
+            
+            if (equipamentosVenda.length === 0) {
+                $('#equipamentos-venda-list').append(`<li>Carrinho Vazio!</li>`);
+            } else {
+                equipamentosVenda.forEach(equipamento => {
+                    $('#equipamentos-venda-list').append(`
+                        <li><strong>${equipamento[2]}</strong></li>
+                        <li>Armazém: ${equipamento[5]}</li>
+                        <li>Qtd: ${equipamento[3]}</li>
+                        <hr/>
+                    `);
+                });
+            }
+            $('#equipamentos-venda-input').val(JSON.stringify(equipamentosVenda));
+        }
+    });
+</script>
+</body>
+</html>

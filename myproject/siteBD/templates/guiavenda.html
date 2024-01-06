@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8">
+    <title>Detalhes Guias Venda</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        .container {
+            padding-top: 20px;
+        }
+        .contentDiv {
+            margin-left: 32px; margin-right: 32px; margin-top: 32px;
+        }
+    </style>
+</head>
+<body>
+
+{% include 'navbar.html' %}
+
+<!-- Conteúdo da página -->
+<div class="contentDiv">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>Encomenda {{encomenda_id}}</h1>
+    </div>
+
+    <!-- Table to display details of components -->
+    <form id="guiaForm" action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <table class="table table-bordered table-striped text-center">
+            <thead class="text-center table-dark">
+                <tr>
+                    <th class="w-25">Equipamentos</th>
+                    <th class="w-25">Armazém</th>
+                    <th class="w-25">Quantidade</th>
+                    <th class="w-25">Destino</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for equipamento in equipamentos %}
+                    <tr>
+                        <td>{{ equipamento.3 }}</td>
+                        <td>{{ equipamento.6 }}</td>
+                        <td>
+                            <input placeholder="Quantidade" class="form-control" required type="number" name="quantidade_{{ equipamento.2 }}" min="0" value="0">
+                        </td>
+                        <td>
+                            <input class="form-control" placeholder="Insira a morada de destino..." required type="text" name="destino_{{ equipamento.2 }}" pattern="^(?!\s)(.*\S)?$" title="Não são permitidos espaços em branco no início ou no final.">
+                        </td>                        
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+      
+        <!-- Input field for NIF -->
+        <label for="nif">NIF:</label>
+        <input min="0" type="number" placeholder="Insira o NIF..." class="form-control" id="nif" name="nif" required>
+    </form>
+        <div class="float-right d-flex m-5">
+            <form id="xmlForm" action="{% url 'importxml_vendaguia_remessa' encomenda_id %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                    <input type="file" id="xmlInput" name="xml_file" class="d-none">
+                    <button id="xmlBtn" type="button" class="btn btn-dark" onclick="chooseFile()">Importar XML</button>
+                    <button id="xmlBtnSend" type="submit" class="d-none btn btn-dark">Enviar XML</button>
+            </form>
+            <button type="button" class="btn btn-dark ml-2" onclick="submitForm()">Adicionar Guia</button>
+        </div>
+</div>
+
+<!-- Bootstrap JS e jQuery (recomendado para ser carregado ao final da página) -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<script>
+function chooseFile() {
+    var btn = document.getElementById("xmlBtn");
+    var btnSend = document.getElementById("xmlBtnSend");
+    $("#xmlInput").click();
+
+    // Adiciona um evento para verificar quando o arquivo for selecionado
+    $("#xmlInput").change(function() {
+        // Verifica se o campo do arquivo não está vazio
+        if ($(this).val()) {
+            // Alterna a visibilidade dos botões
+            btn.classList.toggle("d-none");
+            btnSend.classList.toggle("d-block");
+        }
+    });
+}
+
+    function submitForm() {
+    var formData = [];
+
+    $("table tbody tr").each(function() {
+        var quantidade = parseInt($(this).find("input").val());
+        var idEquipamento = parseInt($(this).find("input").attr("name").split("_")[1]);
+        var destino = $(this).find("input[name^='destino']").val();        
+        if (quantidade > 0 && destino) {
+            formData.push([idEquipamento, quantidade, destino]);
+        }
+    });
+
+    // Converte o array em uma string JSON
+    var formDataJSON = JSON.stringify(formData);
+
+    // Adiciona o campo oculto ao formulário
+    $("#guiaForm").append('<input type="hidden" name="formData" value=\'' + formDataJSON + '\'>');
+
+    // Submete o formulário
+    $("#guiaForm").submit();
+}
+
+</script>
+
+</body>
+</html>

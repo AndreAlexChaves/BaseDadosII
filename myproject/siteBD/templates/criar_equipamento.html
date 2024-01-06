@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <title>Equipamentos</title>
+    <!-- Bootstrap CSS -->
+    <style>
+        .container {
+            padding-top: 20px;
+        }
+        .scrollable-col {
+            height: 75vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+        
+    {% include 'navbar.html' %}
+
+    <!-- Conteudo da pagina -->
+    <div style="margin-left: 32px; margin-right: 32px; margin-top: 32px">
+        <form method="post" class="row">
+            {% csrf_token %}
+            <div class="col-6">  
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1>Criar Equipamento</h1>
+                </div>
+                <div class="form-group">
+                    <label for="id_nome">Nome Equipamento:</label>
+                    <input type="text" class="form-control" pattern="^(?!\s)(.*\S)?$" title="Não são permitidos espaços em branco no início ou no final." id="id_nome" name="Nome" placeholder="Digite o nome do equipamento" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_tipo">Tipo Equipamento:</label>
+                    <select class="form-control" required name="Tipo_Equipamento">
+                        {% for tipo in tipos %}
+                            <option value="{{ tipo.0 }}">{{ tipo.1 }}</option>
+                        {% empty %}
+                            <option value="">Sem dados</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="id_preco">Preço:</label>
+                    <input type="number" class="form-control" id="id_preco" name="Preco_Venda" placeholder="Digite o preco" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_descricao">Descrição:</label>
+                    <textarea class="resize-none form-control" rows="3" pattern="^(?!\s)(.*\S)?$" title="Não são permitidos espaços em branco no início ou no final." id="id_desc" name="Descricao" placeholder="Digite a descrição"></textarea>
+                </div>
+                <div class="d-flex justify-content-center" style="margin-top: 32px;">
+                    <button type="submit" class="btn btn-danger ml-2" style="width: 50%;">Criar Equipamento</button>
+                </div>            
+            </div>
+            <div class="col-6">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1>Especificações</h1>
+                </div>
+                <div class="scrollable-col" id="atributos">
+                    <div class="form-group">
+                        <label for="atributo_name">Nome atributo:</label>
+                        <input type="text" class="form-control" pattern="^(?!\s)(.*\S)?$" title="Não são permitidos espaços em branco no início ou no final." name="atributo_name" placeholder="Digite o nome do atributo" required>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="valor">Valor atributo:</label>
+                        <input type="text" class="form-control" pattern="^(?!\s)(.*\S)?$" title="Não são permitidos espaços em branco no início ou no final." name="valor" placeholder="Digite o valor do atributo  (e.x: Amarelo,Vermelho,Azul)" required>
+                    </div>
+                    <div id="inputcont">
+                    </div>
+                    <button type="button" class="btn btn-dark w-50 mx-auto d-block" style="margin-top: 32px;" id="addInputButton">Adicionar Atributo</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+            
+        document.getElementById("addInputButton").addEventListener("click", function() {
+            var container = document.getElementById("inputcont");
+    
+            var atributoInput = document.createElement("input");
+            atributoInput.type = "text";
+            atributoInput.name = "atributo_name";
+            atributoInput.required = true;
+            atributoInput.classList="form-control";
+            atributoInput.placeholder="Digite o nome do atributo";
+    
+            var valorInput = document.createElement("input");
+            valorInput.type = "text";
+            valorInput.name = "valor";
+            valorInput.required = true;
+            valorInput.classList="form-control";
+            valorInput.placeholder="Digite o valor do atributo (e.x: Amarelo,Vermelho,Azul)"
+    
+            container.appendChild(document.createElement("br"));
+            container.appendChild(document.createTextNode("Nome aributo:"));
+            container.appendChild(atributoInput);
+            container.appendChild(document.createElement("br"));
+            container.appendChild(document.createTextNode("Valor atributo:"));
+            container.appendChild(valorInput);
+        });
+
+    </script>
+</body>
+</html>

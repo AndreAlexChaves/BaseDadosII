@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <title>Produzir Equipamentos</title>
+    <!-- Bootstrap CSS -->
+    <style>
+        .container {
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    
+{% include 'navbar.html' %}
+
+<!-- Conteúdo da página -->
+<div style="margin-left: 32px; margin-right: 32px; margin-top: 32px">
+    <h1 class="text-center">Ficha Produção</h1>
+    <h2 class="text-center"><strong>{{ equipamento_nome }} </strong></h2>
+
+    <div id="componentesContainer">
+        <h3>STOCKS</h3>
+        <table style="margin-top:32px" class="table table-bordered table-striped text-center" id="perfilTable">
+            <thead class="text-center table-dark">
+                <tr>
+                    <th style="width: 18%;">Nome</th>
+                    <th style="width: 18%;">Fornecedor</th>
+                    <th style="width: 18%;">Armazém</th>
+                    <th style="width: 18%;">Stock</th>
+                    <th style="width: 10%;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for element in componentes %}
+                    <tr>
+                        <td>{{ element.3 }}</td>
+                        <td>{{ element.5 }}</td>
+                        <td>{{ element.1 }}</td>
+                        <td>{{ element.8 }} qt</td>
+                        <td>
+                            <div class="input-group">
+                                <input type="number" min="0" class="form-control quantidade" placeholder="Quantidade" nome-componente="{{ element.3 }}" data-componente="{{ element.2 }}" data-armazem="{{ element.0 }}" nome-armazem="{{ element.1 }}">
+                                <button type="button" class="btn btn-dark btn-sm adicionar">
+                                    Adicionar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="12">Sem componentes em Stock</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div>
+        <br><h3>Componentes a utilizar</h3><br>
+        <ul id="componentes-compra-list" style="padding: 0%;"></ul>
+        <form method="post" action="{% url "processar_fichaproducao" equipamento_id %}">
+            {% csrf_token %}
+            <!-- Adicione um campo oculto para enviar os dados da lista de componentes -->
+            <input type="hidden" name="componentes" id="componentes-input" value="">
+            <div class="row">
+            <div class="form-group col-4">
+                <label for="id_mao_obra">Mão de Obra</label>
+                <select required class="form-control" id="id_mao_obra" name="ID_Mao_Obra">
+                    {% for mao in maoobra %}
+                        <option value="{{ mao.0 }}">{{ mao.1 }} - {{ mao.2 }}€</option>
+                        {% empty %}
+                            <option value="">Sem Dados!</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group col-4" >
+                <label for="id_armazem">Armazém</label>
+                <select required class="form-control" id="id_armazem" name="ID_Armazem">
+                    {% for armazem in armazens %}
+                        <option value="{{ armazem.0 }}">{{ armazem.1 }}</option>
+                    {% empty %}
+                        <option value="">Sem Dados!</option>
+                    {% endfor %}
+                </select>
+            </div>   
+            </div>
+            <div class="row">
+            <div class="form-group col-4">
+                <label for="data_hora_inicio">Data e Hora de Início</label>
+                <input type="datetime-local" required class="form-control" id="data_hora_inicio" name="Data_Hora_Inicio">
+            </div>
+            <div class="form-group col-4">
+                <label for="data_hora_fim">Data e Hora de fim</label>
+                <input type="datetime-local" required class="form-control" id="data_hora_fim" name="Data_Hora_Fim">
+            </div>
+            </div>
+            <div class="row">
+            <div class="form-group col-4" >
+                <label for="quantidadeequipamentos">Equipamentos produzidos</label>
+                <input type="number" class="form-control name="quantidadeequipamentos" min="1" name="Quantidade" required id="quantidadeequipamentos">
+            </div>
+            </div>
+            <button ml-2 type="submit" class="btn btn-lg btn-success" id="produzir-btn">
+                Produzir
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('produzir-btn').addEventListener('click', function (event) {
+            var componentesInput = document.getElementById('componentes-input');
+            var componentesList = JSON.parse(componentesInput.value || '[]');
+
+            if (componentesList.length === 0) {
+                alert('A lista de componentes a serem utilizados deve ter pelo menos um componente.');
+                event.preventDefault(); // Evita o envio do formulário
+            }
+        });
+
+        // Adiciona um ouvinte de evento de clique aos botões "Adicionar"
+        document.querySelectorAll('.adicionar').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var quantidadeInput = button.previousElementSibling;
+                var quantidade = parseInt(quantidadeInput.value);
+                var componenteNome = quantidadeInput.getAttribute('nome-componente');
+                var armazemNome = quantidadeInput.getAttribute('nome-armazem');
+                var componenteId = quantidadeInput.getAttribute('data-componente');
+                var armazemId = quantidadeInput.getAttribute('data-armazem');
+
+                var componentesInput = document.getElementById('componentes-input');
+                var componentesList = JSON.parse(componentesInput.value || '[]');
+
+                var componenteExistenteIndex = componentesList.findIndex(function (item) {
+                    return item.componenteId === componenteId && item.armazemId === armazemId;
+                });
+
+                if (componenteExistenteIndex !== -1) {
+                    componentesList[componenteExistenteIndex].quantidade += quantidade;
+                } else {
+                    componentesList.push({ componenteId: componenteId, armazemId: armazemId, quantidade: quantidade, componenteNome: componenteNome, armazemNome: armazemNome });
+                }
+
+                var componentesCompraList = document.getElementById('componentes-compra-list');
+                componentesCompraList.innerHTML = '';  // Limpar o conteúdo atual
+
+                // Criar tabela e cabeçalho
+                var table = document.createElement('table');
+                table.classList.add('table', 'table-bordered', 'table-striped', 'text-center');
+                var thead = document.createElement('thead');
+                thead.classList.add('table-dark');
+                var tr = document.createElement('tr');
+                ['Quantidade', 'Componente', 'Armazém', 'Ações'].forEach(function (headerText) {
+                    var th = document.createElement('th');
+                    th.textContent = headerText;
+                    tr.appendChild(th);
+                });
+                thead.appendChild(tr);
+                table.appendChild(thead);
+
+                // Adicionar linhas à tabela
+                var tbody = document.createElement('tbody');
+                componentesList.forEach(function (item) {
+                    var tr = document.createElement('tr');
+                    ['quantidade', 'componenteNome', 'armazemNome'].forEach(function (property) {
+                        var td = document.createElement('td');
+                        td.textContent = item[property];
+                        tr.appendChild(td);
+                    });
+
+                    // Adicionar botão de remoção
+                    var tdRemover = document.createElement('td');
+                    var removerButton = document.createElement('button');
+                    removerButton.textContent = 'Remover';
+                    removerButton.className = 'btn btn-danger btn-sm remover';
+                    removerButton.setAttribute('data-componente', item.componenteId);
+                    removerButton.setAttribute('data-armazem', item.armazemId);
+                    tdRemover.appendChild(removerButton);
+                    tr.appendChild(tdRemover);
+
+                    tbody.appendChild(tr);
+                });
+
+                table.appendChild(tbody);
+                componentesCompraList.appendChild(table);
+
+                componentesInput.value = JSON.stringify(componentesList);
+            });
+        });
+
+
+        // Adiciona um ouvinte de evento de clique aos botões "Remover"
+        document.getElementById('componentes-compra-list').addEventListener('click', function (event) {
+            if (event.target.classList.contains('remover')) {
+                var componenteId = event.target.getAttribute('data-componente');
+                var armazemId = event.target.getAttribute('data-armazem');
+
+                var componentesInput = document.getElementById('componentes-input');
+                var componentesList = JSON.parse(componentesInput.value || '[]');
+
+                var componenteIndex = componentesList.findIndex(function (item) {
+                    return item.componenteId === componenteId && item.armazemId === armazemId;
+                });
+
+                componentesList.splice(componenteIndex, 1);
+
+                var componentesCompraList = document.getElementById('componentes-compra-list');
+                var table = componentesCompraList.querySelector('table');
+
+                // Verificar se há pelo menos um elemento restante antes de limpar o conteúdo
+                if (componentesList.length > 0) {
+                    var tbody = table.querySelector('tbody');
+                    tbody.innerHTML = '';
+
+                    // Adicionar linhas à tabela
+                    componentesList.forEach(function (item) {
+                        var tr = document.createElement('tr');
+                        ['quantidade', 'componenteNome', 'armazemNome'].forEach(function (property) {
+                            var td = document.createElement('td');
+                            td.textContent = item[property];
+                            tr.appendChild(td);
+                        });
+
+                        // Adicionar botão de remoção
+                        var tdRemover = document.createElement('td');
+                        var removerButton = document.createElement('button');
+                        removerButton.textContent = 'Remover';
+                        removerButton.className = 'btn btn-danger btn-sm remover';
+                        removerButton.setAttribute('data-componente', item.componenteId);
+                        removerButton.setAttribute('data-armazem', item.armazemId);
+                        tdRemover.appendChild(removerButton);
+                        tr.appendChild(tdRemover);
+
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    // Se não houver mais elementos, remover a tabela
+                    componentesCompraList.removeChild(table);
+                }
+
+                componentesInput.value = JSON.stringify(componentesList);
+            }
+        });
+
+
+    });
+</script>
+</body>
+</html>

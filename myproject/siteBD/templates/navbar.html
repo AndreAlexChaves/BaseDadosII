@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Navbar</title>
+    <!-- Bootstrap CSS -->
+    {% load static %}
+
+    <link rel="shortcut icon" href="{% static 'images/logo.png' %}" type="image/x-icon">
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.0.0/uicons-bold-straight/css/uicons-bold-straight.css'>
+    <style>
+        .navcolor {
+            background: linear-gradient(to right, #BD2A2E, #000000);
+        }
+
+        a {
+            color: white;
+        }
+
+        .navcolor a:hover {
+            color: white;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+
+        .search-bar {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            justify-content: center;
+            padding-left: 40px; /* Ajuste a largura conforme necessário */
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 10px; /* Ajuste a posição conforme necessário */
+            top: 50%;
+            color: black;
+            transform: translateY(-50%);
+        }
+        .no-select {
+            -webkit-user-select:none;  
+            -moz-user-select:none;     
+            -ms-user-select:none;      
+            user-select:none;  
+        } 
+        .dropdown-item{
+            color: white;
+        }
+
+        .dropdown-item:hover{
+           background-color: grey;
+        }
+        
+        .no-pointer-events{
+            pointer-events: none;
+        }
+
+        .fixTOP{
+            z-index: 99999;
+        }
+
+        .underline{
+            border-bottom: 0.05px solid aliceblue;
+            width: 85%;
+        }
+    </style>
+</head>
+
+<body class="no-select">
+
+    <nav class="navbar navbar-expand-lg navcolor">
+        <a title="menu" class="nav-link" id="dropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="h-auto text-white fs-1 fi fi-rr-menu-burger color-white"></i></a>
+        <div class="dropdown-menu bg-dark fixTOP" aria-labelledby="dropdown">
+            <a class="dropdown-item" href="/componentes">Componentes</a>
+            <p class="underline h-0 m-0 p-0"></p>
+            <a class="dropdown-item" href="/equipamentos">Equipamentos</a>
+            <p class="underline h-0 m-0 p-0"></p>
+            <a class="dropdown-item" href="/encomendaComponentes">Encomendar Componentes</a>
+            <p class="underline h-0 m-0 p-0"></p>
+            <a class="dropdown-item" href="/minhasencomendas">Minhas encomendas</a>
+            <p class="underline h-0 m-0 p-0"></p>
+            {% if request.session.perms == 2 %}
+            <a class="dropdown-item" href="/armazem">Armazéns</a>
+            <p class="underline h-0 m-0 p-0"></p>
+            <a class="dropdown-item" href="/cliente">Clientes</a>
+            <p class="underline h-0 m-0 p-0"></p>
+            <a class="dropdown-item" href="/encomendas">Encomendas</a>
+            <p class="underline h-0 m-0 p-0"></p>
+            <a class="dropdown-item" href="/fornecedor">Fornecedores</a>            
+            <p class="underline h-0 m-0 p-0"></p>
+            <a class="dropdown-item" href="/maoobra">Mão de obra</a>
+            <p class="underline h-0 m-0 p-0"></p>
+            <a class="dropdown-item" href="/perfil">Perfis</a>
+            <p class="underline h-0 m-0 p-0"></p>
+            <a class="dropdown-item" href="/stocks">Stocks</a>
+            <p class="underline h-0 m-0 p-0"></p>
+            <a class="dropdown-item" href="/tipoequipamento">Tipo equipamento</a>
+            <p class="underline h-0 m-0 p-0"></p>
+            <a class="dropdown-item" href="/utilizador">Utilizadores</a>
+            <p class="underline h-0 m-0 p-0"></p>
+            {% endif %}
+        </div>
+        <a class="navbar-brand logo" href="{% url 'list_equipamentos' %}"><strong>Computronix</strong></a>
+    
+        <!-- Additional Navbar Links -->
+        <div class="navbar-nav ml-auto">
+            <a class="nav-link" href="{% url 'encomendaEquipamentos' %}"><i class="fi fi-rr-shopping-cart"></i> Carrinho</a>
+            {% if request.session.username %}
+                <a class="nav-link no-pointer-events" href="#">{{ request.session.username }}</a>
+                <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+            {% else %}
+                <a class="nav-link" href="{% url 'login' %}"><i class="fi fi-rr-user"></i> Login</a>
+            {% endif %}
+        </div>
+    
+    </nav>
+    
+
+    <!-- Bootstrap JS (popper.js is required for dropdowns) -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>

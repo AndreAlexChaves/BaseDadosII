@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Login</title>
+    {% load static %}
+    <style>
+    .body{
+        background-color: #F3F3F3;
+    }
+
+.container {
+    text-align: center;
+}
+
+.vertical-rectangle {
+    width: 20px; /* Largura do retângulo */
+    height: 100px; /* Altura do retângulo */
+    background-color: #fff; /* Branco como cor de fundo */
+    display: inline-block;
+}
+
+.round{
+  border-radius: 1rem;
+}
+</style>
+</head>
+<body style="background-color:#FDFDFD;">
+    {% include 'navbar_logo.html' %}
+        <div class="container py-5 h-100">
+          <div class="row d-flex justify-content-center align-items-center h-100">
+            <div class="col col-xl-6">
+              <div class="card round">
+                <div class="row">
+                  <div class="col-md-12 col-lg-12">
+                    <div class="card-body p-4 p-lg-5 text-black">
+                      <form method="post" action="{% url 'login' %}" autocomplete="off">
+                        {% csrf_token %}
+                        <img src="{% static 'images/logo.png' %}" class="m-0 p-0 w-50 h-50" alt="Computronix">
+                        <h5 class="mb-3 pb-3" style="letter-spacing: 1px;">Sign into your account</h5>
+                        <div class="mb-4">
+                          <label class="form-label" for="username">Username</label>
+                          <input type="username" id="username" class="form-control form-control-lg" name="Username" />
+                        </div>
+                        <div class="mb-4">
+                          <label class="form-label" for="password">Password</label>
+                          <input type="password" id="password" class="form-control form-control-lg" name="Password" />
+                        </div>
+                        <div class="pt-1 mb-4">
+                          <button class="btn btn-dark btn-lg btn-block" type="submit">Login</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+
+
+</body>
+</html>
+

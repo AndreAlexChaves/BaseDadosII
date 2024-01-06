@@ -1,0 +1,393 @@
+--Proc criar utilizador
+CALL sp_utilizadores_CREATE('User', 'user', 'user', 'user@computronix.com', '987654321', 1);
+
+--Função read utilizador
+SELECT * FROM fn_utilizadores_READ(1);
+
+--Função read utilizadores
+SELECT * FROM fn_utilizadores_READALL();
+
+--Proc para editar utilizador
+CALL sp_Utilizadores_UPDATE(1, 'novoUser', 'novoUser', 'novoUser', 'novoUser@example.com', '987654321', 2);
+
+--Proc para eliminar utilizador
+CALL sp_Utilizadores_DELETE(1);
+
+
+--Proc criar armazém
+CALL sp_Armazens_CREATE('Localizacao');
+
+--Função read armazém
+SELECT * FROM fn_Armazem_READ(1);
+
+--Função read armazéns
+SELECT * FROM fn_Armazens_READALL();
+
+--Proc para editar armazém
+CALL sp_Armazens_UPDATE(1, 'NovaLocalizacao');
+
+--Proc para eliminar armazém
+CALL sp_Armazens_DELETE(1);
+
+
+--Proc criar componentes
+CALL sp_Componentes_CREATE('Descricao', 'Componente', 1);
+
+--Função read componente
+SELECT * FROM fn_Componente_READ(1);
+
+--Função read componentes
+SELECT * FROM fn_Componentes_READALL();
+
+--Proc editar componente
+-- Chamar a stored procedure
+CALL sp_Componentes_UPDATE(1, 'NovaDescrição', 'NovoComponente');
+
+--Proc eliminar componente
+CALL sp_Componentes_DELETE(1);
+
+
+--Proc criar componente na encomenda de compra
+CALL sp_Componentes_Encomenda_Compra_CREATE(1, 1, 50.00, 10);
+
+--Função read componente da encomenda de compra
+SELECT * FROM fn_Componentes_Encomenda_Compra_READ(1);
+
+--Função read componentes da encomenda de compra
+SELECT * FROM fn_Componentes_Encomenda_Compra_READALL();
+
+-- Função para buscar um detalhe de componente em encomenda de compra por ID da encomenda
+SELECT * FROM fn_Componentes_Encomenda_Compra_READByEnc(1);
+
+--Proc editar componente da encomenda de compra
+CALL sp_Componentes_Encomenda_Compra_UPDATE(1, 2, 3, 60.00, 15);
+
+--Proc eliminar componente da encomenda de compra
+CALL sp_Componentes_Encomenda_Compra_DELETE(1);
+
+
+--Proc criar componente na guia de remessa de compra
+CALL sp_Componentes_Guia_Remessa_Compra_CREATE(1, 2, 10, 3);
+
+--Função para buscar detalhes dos componentes na guia de remessa de compra por ID_Remessa_compra
+SELECT * FROM fn_Componentes_Guia_Remessa_Compra_READ(1);
+
+--Função read componentes da guia de remessa de compra
+SELECT * FROM fn_Componentes_Guia_Remessa_Compra_READALL();
+
+--Proc editar componente da guia de remessa de compra
+CALL sp_Componentes_Guia_Remessa_Compra_UPDATE(1, 2, 3, 15, 4);
+
+--Proc eliminar componente da guia de remessa de compra
+CALL sp_Componentes_Guia_Remessa_Compra_DELETE(1);
+
+
+--Proc criar componente na ficha de produção
+CALL sp_Componentes_Ficha_Producao_CREATE(1, 2, 15, 3);
+
+--Função para buscar detalhes dos componentes na ficha de produção por ID_Comp_Fich
+SELECT * FROM fn_Componentes_Ficha_Producao_READ(1);
+
+--Função read componentes da ficha de produção
+SELECT * FROM fn_Componentes_Ficha_Producao_READALL();
+
+--Proc editar componente da ficha de produção
+CALL sp_Componentes_Ficha_Producao_UPDATE(1, 2, 3, 15, 4);
+
+--Proc eliminar componente da ficha de produção
+CALL sp_Componentes_Ficha_Producao_DELETE(1);
+
+
+--Proc criar perfil
+CALL sp_perfil_CREATE('Administrador', '2');
+
+--Função read perfil
+SELECT * FROM fn_perfil_READ(1);
+
+--Função read perfis
+SELECT * FROM fn_perfil_READALL();
+
+--Proc editar perfil
+-- Chamar a stored procedure
+CALL sp_perfil_UPDATE(1, 'NovoPerfil', '1');
+
+--Proc eliminar perfil
+CALL sp_perfil_DELETE(1);
+
+
+--Proc criar mão de obra
+CALL sp_Mao_Obra_CREATE('MaoObra', 50.00);
+
+--Função read mão de obra
+SELECT * FROM fn_Mao_Obra_READ(1);
+
+--Função read mãos de obra
+SELECT * FROM fn_Mao_Obra_READALL();
+
+--Proc editar mão de obra
+-- Chamar a stored procedure
+CALL sp_Mao_Obra_UPDATE(1, 'NovaMaoObra', 60.00);
+
+--Proc eliminar mão de obra
+CALL sp_Mao_Obra_DELETE(1);
+
+
+--Proc criar tipo de equipamento
+CALL sp_Tipo_Equipamento_CREATE('Computador');
+
+--Função read tipo de equipamento
+SELECT * FROM fn_Tipo_Equipamento_READ(1);
+
+--Função read tipos de equipamento
+SELECT * FROM fn_Tipo_Equipamento_READALL();
+
+--Proc editar tipo de equipamento
+CALL sp_Tipo_Equipamento_UPDATE(1, 'Tablet');
+
+--Proc eliminar tipo de equipamento
+CALL sp_Tipo_Equipamento_DELETE(1);
+
+
+--Proc criar equipamento na encomenda de venda
+CALL sp_Equipamentos_Encomenda_Venda_CREATE(1, 2, 100.00, 5, 3);
+
+--Função read equipamentos na encomenda de venda por ID_Enc_Venda
+SELECT * FROM fn_Equipamentos_Encomenda_Venda_READ(1);
+
+--Função read equipamentos na encomenda de venda
+SELECT * FROM fn_Equipamentos_Encomenda_Venda_READALL();
+
+--Proc editar equipamento na encomenda de venda
+CALL sp_Equipamentos_Encomenda_Venda_UPDATE(
+    p_ID_Equipamentos_Encomenda_Venda := 1,
+    p_ID_Enc_Venda := 2,
+    p_ID_Equipamento := 3,
+    p_Preco_Total := 150.00,
+    p_Quantidade := 5,
+    p_ID_Armazem := 4
+);
+--Proc eliminar equipamento na encomenda de venda
+CALL sp_Equipamentos_Encomenda_Venda_DELETE(1);
+
+
+--Proc criar equipamento guia de remessa de venda
+CALL sp_Equipamentos_Guia_Remessa_Venda_CREATE(1, 2, 5, 'MoradaDestino');
+
+--Função read equipamentos na guia de remessa de venda por ID_Remessa_Venda
+SELECT * FROM fn_Equipamentos_Guia_Remessa_Venda_READ(1);
+
+--Função read equipamentos guia de remessa de venda
+SELECT * FROM fn_Equipamentos_Guia_Remessa_Venda_READALL();
+
+--Proc editar equipamento guia de remessa de venda
+CALL sp_Equipamentos_Guia_Remessa_Venda_UPDATE(1, 2, 3, 10);
+
+--Proc eliminar equipamento guia de remessa de venda
+CALL sp_Equipamentos_Guia_Remessa_Venda_DELETE(1);
+
+
+--VALORES ATRIBUTOS E SEGUINTES...
+
+--Proc para criar valores atributos
+CALL sp_Valores_Atributos_CREATE ('Valor');
+
+--Funcao read valores atributos por id
+SELECT * FROM fn_Valores_Atributos_READ(1);
+
+--Funcao read valores atributos
+SELECT * FROM fn_Valores_Atributos_READALL();
+
+--Proc para editar valores_atributos
+CALL sp_Valores_Atributos_UPDATE(1, 'Novo Valor Atualizado');
+
+--Proc para eliminar valores atributos
+CALL sp_Valores_Atributos_DELETE(1);
+
+--Proc para criar cliente
+CALL sp_Clientes_CREATE('Nome', 'Morada', 912345678, 123456789);
+
+--Função read clientes por ID_cliente
+SELECT * FROM fn_clientes_read(1)
+
+--Funcao read clientes
+SELECT * FROM fn_clientes_readall();
+
+--Proc editar cliente
+Call sp_clientes_update(1, 'Outro Nome', 'Outra Morada', 67584903, 1234231);
+
+--Proc eliminar cliente
+Call sp_clientes_delete(1);
+
+--Proc criar fornecedor
+CALL sp_fornecedores_CREATE('Nome do Fornecedor', 'Morada do Fornecedor', '123456789', '987654321');
+
+--Funcao read fornecedor por id
+SELECT * FROM fn_fornecedores_READ(1);
+
+--Funcao read fornecedor
+SELECT * FROM fn_fornecedores_READALL();
+
+--Proc editar fornecedor
+CALL sp_fornecedores_UPDATE(1, 'Novo Nome', 'Nova Morada', '987654321', '123456789');
+
+--Proc eliminar fornecedor
+CALL sp_fornecedores_DELETE(1);
+
+--Proc create encomenda compra
+DECLARE p_id_enc_compra INT;
+CALL sp_encomenda_compra_create(1, 2, p_id_enc_compra);
+
+--Funcao read encomenda de compra por id
+SELECT * FROM fn_encomenda_compra_READ(1);
+
+--Funcao read encomenda de compra
+SELECT * FROM fn_encomenda_compra_READALL();
+
+--Proc editar encomenda de compra
+CALL sp_encomenda_compra_update(1, 'Concluída', CURRENT_DATE, 3, 4);
+
+--Proc eliminar encomenda de compra
+CALL sp_encomenda_compra_delete(1);
+
+--Proc para criar equipamento
+DECLARE p_novo_id INT;
+CALL sp_equipamentos_create('Nome do Equipamento', 'Descrição do Equipamento', 100.00, 1, p_novo_id);
+
+--Funcao read equipamento por id
+SELECT * FROM fn_equipamentos_READ(1);
+
+--Funcao read equipamento
+SELECT * FROM fn_equipamentos_READALL();
+
+--Proc para editar equipamento
+CALL sp_equipamentos_update(1, 'Novo Nome', 'Nova Descrição', 150.00, 2);
+
+-- Proc para eliminar equipamento
+CALL sp_equipamentos_delete(1);
+
+--Proc para criar guia remessa de venda
+DECLARE p_id_guia_venda INT;
+CALL sp_guia_remessa_venda_create(1, '987654321', p_id_guia_venda);
+
+--Funcao read guia renessa de venda por id
+SELECT * FROM fn_guia_remessa_venda_READ(1);
+
+--Funcao read guia remessa de venda
+SELECT * FROM fn_guia_remessa_venda_READALL();
+
+--Proc para editar guia remessa de venda
+CALL sp_guia_remessa_venda_update(1, 2, CURRENT_DATE, '123456789');
+
+--Proc para eliminar guia de remessa de venda
+CALL sp_guia_remessa_venda_delete(1);
+
+--Vista do stock equipamento
+SELECT * FROM VIEW_stocks_read_equipamentos;
+
+--Vista stock componentes
+SELECT * FROM VIEW_stocks_read_componentes;
+
+--Trigger atualizar estado encomenda venda
+INSERT INTO Equipamentos_Guia_Remessa_Venda (ID_Remessa_Venda, ID_Equipamento, Quantidade)
+VALUES (1, 1, 10);
+
+SELECT atualizar_estado_encomenda_venda() FROM Guia_Remessa_Venda WHERE ID_Remessa_Venda = 1;
+
+SELECT * FROM Encomenda_Venda;
+
+--Trigger atualizar estado encomenda compra
+INSERT INTO Componentes_Guia_Remessa_Compra (ID_Remessa_compra, ID_Comp, Quantidade) VALUES (1, 1, 10);
+
+SELECT * FROM Encomenda_Compra;
+
+--Trigger check_user
+SELECT check_user('username', 'password');
+
+--Funcao para devolver id do user
+SELECT get_user_id('admin');
+
+--Funcao para devolver username
+SELECT get_idperfil_by_username(1);
+
+--Proc create venda encomenda
+DECLARE new_enc_venda_id INT;
+CALL sp_encomenda_venda_create(1, 2, new_enc_venda_id);
+
+--Funcao read venda encomenda por id
+SELECT * FROM fn_encomenda_venda_READ(1);
+
+--Funcao read venda encomenda
+SELECT * FROM fn_encomenda_venda_READALL();
+
+--Proc editar venda encomenda
+CALL sp_encomenda_venda_update(1, 'Concluída', CURRENT_DATE, 3, 4);
+
+--Proc eliminar venda encomenda
+CALL sp_encomenda_venda_delete(1);
+
+--Proc create guia remessa compra
+DECLARE new_guia_compra_id INT;
+CALL sp_guia_remessa_compra_create(1, '1234567890', new_guia_compra_id);
+
+--Funcao read guia remessa compra por id
+SELECT * FROM fn_guia_remessa_compra_read(1);
+
+--Funcao read guia remessa compra
+SELECT * FROM fn_guia_remessa_compra_readall();
+
+--Proc editar guia remessa compra
+CALL sp_guia_remessa_compra_update(1, 2, CURRENT_DATE, '0987654321');
+
+--Proc eliminar guia remessa compra
+CALL sp_guia_remessa_compra_delete(1);
+
+--Funcao exportar encomenda compra xml
+SELECT exportar_encomenda_compra_xml(1);
+
+--Funcao nome tipo equipamento
+SELECT get_nome_tipo_equipamento(1);
+
+--View Compras Encomenda
+SELECT * FROM View_Encomendas_Compras;
+
+--View Vendas Encomenda
+SELECT * FROM View_Encomendas_Vendas;
+
+--View Compras componentes encomenda
+SELECT * FROM View_Componentes_Encomenda_Compra;
+
+--View Fornecedores Componentes
+SELECT * FROM View_Componentes_Fornecedores;
+
+--View Perfil de Utilizador
+SELECT * FROM View_Utilizador_Perfil;
+
+--Proc create ficha producao
+CALL sp_ficha_producao_create(1, 2, 3, '2024-01-03 10:00:00', '2024-01-03 12:00:00', 100, 4, NULL);
+
+--Funcao read ficha producao por id
+SELECT * FROM fn_ficha_producao_READ(1);
+
+--Funcao read ficha producao
+SELECT * FROM fn_ficha_producao_READALL();
+
+--Proc eliminar ficha producao
+CALL sp_ficha_producao_delete(1);
+
+--View Ficha Producao Equipamento
+SELECT * FROM View_FichasProducao_Equipamentos;
+
+--View Venda Encomenda Equipamento
+SELECT * FROM View_Equipamentos_Encomenda_Venda;
+
+--View Guia e Venda Equipamentos
+SELECT * FROM View_Guias_e_Equipamentos_Vendas;
+
+--Funcao exportar encomenda venda xml
+SELECT exportar_encomenda_venda_xml(1);
+
+--Funcao importar guiavenda xml
+SELECT fn_guiavenda_importar_xml('<xml_data>'::xml);
+
+--Funcao importar guiacompra xml
+SELECT fn_guiacompra_importar_xml('<xml_data>'::xml);

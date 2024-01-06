@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <title>Perfil</title>
+    <!-- Bootstrap CSS -->
+    <style>
+        .container {
+            padding-top: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    
+    {% include 'navbar.html' %}
+
+<!-- Conteúdo da página -->
+<div style="margin-left: 32px; margin-right: 32px; margin-top: 32px">
+    <!-- Caixa de pesquisa e botão "Novo Perfil" -->
+    <div class="row sticky-top bg-white p-1">
+        <div class="col-10">
+            <div class="search-bar border"> 
+                <span class="search-icon"><i class="fi fi-rr-search"></i></span>
+                <input class="w-100" type="text" id="searchInput" placeholder="Pesquisar perfil...">
+            </div>      
+        </div>
+        <div class="col-2">
+            <button type="button" class="btn btn-dark w-100 h-100" data-toggle="modal" data-target="#myModal">
+              Novo Perfil
+            </button>
+        </div>
+        </div>
+
+
+    <!-- Tabela para exibir os perfis -->
+    <table style="margin-top:32px" class="table table-bordered table-striped text-center" id="perfilTable"> <!-- Adicionando classe mx-auto para centralizar -->
+        <thead class="text-center table-dark">
+            <tr>
+                <th style="width: 33.33%;">Perfil</th>
+                <th style="width: 33.33%;">Permissões</th>
+                <th style="width: 33.33%;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for perfil in data %}
+                <tr>
+                    <td>{{ perfil.1 }}</td>
+                    <td>{{ perfil.2 }}</td>
+                    <td>
+                        <!-- <a href="{% url 'edit_perfil' perfil.0 %}" class="btn btn-dark btn-sm" style="width: 70px; margin-right: 10px">Editar</a> -->
+                        <button type="button" class="btn btn-dark btn-sm" style="width: 70px;" data-toggle="modal" data-target="#editarPerfilModal{{ perfil.0 }}">Editar</button>
+                        <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" style="width: 70px;" data-target="#confirmDelete{{ perfil.0 }}">Eliminar</button>
+                    </td>
+                </tr>
+
+                <!-- Modal para confirmação de eliminação -->
+                <div class="modal fade" id="confirmDelete{{ perfil.0 }}" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="confirmDeleteLabel">Confirmar Eliminação</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Tem certeza de que deseja eliminar o perfil "{{ perfil.1 }}"?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <a href="{% url 'delete_perfil' perfil.0 %}" class="btn btn-danger">Eliminar</a> <!-- Link para a função de eliminar -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal para editar perfil -->
+                <div class="modal fade" id="editarPerfilModal{{ perfil.0 }}" tabindex="-1" role="dialog" aria-labelledby="editarPerfilModalLabel{{ perfil.0 }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editarPerfilModalLabel{{ perfil.0 }}">Editar Perfil - {{ perfil.0 }}</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <!-- Formulário para editar o perfil -->
+                                <form method="post" action="{% url 'edit_perfil' perfil_id=perfil.0 %}">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="perfil">Perfil:</label>
+                                        <input type="text" id="perfil" name="Perfil"  pattern="^(?!\s)(.*\S)?$" title="Não são permitidos espaços em branco no início ou no final."  required value="{{ perfil.1 }}" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="perms">Permissões:</label>
+                                        <input type="number" id="perms" name="Perms" value="{{ perfil.2 }}" class="form-control">
+                                    </div>
+                                    <button type="submit" class="float-right btn btn-dark">Editar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <tr>
+                    <td colspan="3">Nenhum perfil disponível</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para adicionar perfil -->
+<div class="modal" id="myModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title">Criar Tipo de Perfil</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">×</span>
+              </button>
+          </div>
+          <div class="modal-body">
+            
+              <!-- Formulário para criar tipo de perfil -->
+              <form method="post">
+                  {% csrf_token %}
+                  <div class="form-group">
+                      <label for="id_perfil">Perfil:</label>
+                      <input type="text" class="form-control" pattern="^(?!\s)(.*\S)?$" title="Não são permitidos espaços em branco no início ou no final."  required id="id_perfil" name="Perfil" placeholder="Digite o perfil">
+                  </div>
+                  <div class="form-group">
+                      <label for="id_perms">Permissões:</label>
+                      <input type="number" class="form-control" required id="id_perms" name="Perms" placeholder="Digite as permissões">
+                  </div>
+                  <!-- Adicione mais campos conforme necessário -->
+                  <button class="float-right btn btn-dark" type="submit">Criar Tipo de Perfil</button>
+              </form>
+          </div>
+      </div>
+  </div>
+</div>
+
+
+  
+
+<!-- Bootstrap JS e jQuery (recomendado para ser carregado ao final da página) -->
+<script>
+    $(document).ready(function () {
+        // Captura o evento de digitar no campo de pesquisa
+        $('#searchInput').on('keyup', function () {
+            // Obtém o valor digitado
+            var searchText = $(this).val().toLowerCase();
+
+            // Filtra as linhas da tabela com base no valor digitado
+            $('#perfilTable tbody tr').filter(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(searchText) > -1);
+            });
+        });
+    });
+
+</script>
+</body>
+</html>

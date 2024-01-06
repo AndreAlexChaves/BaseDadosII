@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <title>Detalhes Encomenda Compra</title>
+    <style>
+        .container {
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+{% include 'navbar.html' %}
+
+<!-- Conteúdo da página -->
+<div style="margin-left: 32px; margin-right: 32px; margin-top: 32px">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>Encomenda {{encomenda_id}}</h1>
+        {% if compras.0.1 == "Pendente" %}
+            <a href="{% url 'add_compraguia_remessa' encomenda_id %}">
+                <button type="button" class="btn btn-dark">Criar Guia</button>
+            </a>
+        {% endif %}
+    </div>    
+
+    <!-- Table to display details of purchase order -->
+    <table class="table table-bordered table-striped text-center mb-0">
+        <thead class="text-center table-dark">
+            <tr>
+                <th style="width: 10%;">Encomenda</th>
+                <th style="width: 18%;">Estado</th>
+                <th style="width: 18%;">Data</th>
+                <th style="width: 18%;">Utilizador</th>
+                <th style="width: 18%;">Fornecedor</th>
+                <th style="width: 18%;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ compras.0.0 }}</td>
+                <td>{{ compras.0.1 }}</td>
+                <td>{{ compras.0.2 }}</td>
+                <td>{{ compras.0.3 }}</td>
+                <td>{{ compras.0.4 }}</td>
+                <td>
+                    <a href="{% url 'export_encomenda_compra_xml' encomenda_id %}"> 
+                        <button type="button" class="btn btn-danger btn-sm">Export XML</button>
+                    </a>
+                </td>                
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Table to display details of components -->
+    <table class="table table-bordered table-striped text-center mt-0">
+        <thead class="text-center table-dark">
+            <tr>
+                <th style="width: 18%;">Componentes</th>
+                <th style="width: 18%;">Preço</th>
+                <th style="width: 18%;">Quantidade</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for componente in componentes %}
+                <tr>
+                    <td>{{ componente.3 }}</td>
+                    <td>{{ componente.4 }}€</td>
+                    <td>{{ componente.5 }} qt</td>
+                </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3">Sem dados</td>
+                    </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <!-- Iterar sobre guias -->
+    <h2 class="mb-3">Guias Remessa</h2>
+    {% for guia_id, guia_data in dados_agrupados.items %}
+    {% with i=forloop.counter %}
+        <table class="table table-bordered table-striped text-center mt-0 mb-0">
+            <!-- Cabeçalho da tabela para os dados do guia -->
+            <thead class="text-center table-dark">
+                <tr>
+                    <th style="width: 18%;"># {{i}}</th>
+                    <th style="width: 18%;">NIF {{ guia_data.guia.3 }}</th>
+                    <th style="width: 18%;">Data {{ guia_data.guia.2 }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th style="width: 18%;">Componentes</th>
+                    <th style="width: 18%;">Quantidade</th>
+                    <th style="width: 18%;">Armazém</th>
+                </tr>
+                {% for componente in guia_data.componentes %}
+                <!-- Adaptar de acordo com a estrutura do seu componente_guia -->
+                    <tr>
+                        <td>{{ componente.Nome_Componente }}</td>
+                        <td>{{ componente.Quantidade }} qt</td>
+                        <td>{{ componente.Localizacao_Armazem }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3">Sem dados</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endwith %}
+        {% empty %}
+        <table class="table table-bordered table-striped text-center">
+            <tbody>
+
+        <tr>
+            <td colspan="12">Sem dados</td>
+        </tr>
+            </tbody>
+        </table>
+    {% endfor %}
+</body>
+</html>

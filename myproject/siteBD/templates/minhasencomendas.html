@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <title>Minhas Encomendas</title>
+    <!-- Bootstrap CSS -->
+    <style>
+        .container {
+            padding-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    
+{% include 'navbar.html' %}
+
+<!-- Conteúdo da página -->
+<div style="margin-left: 32px; margin-right: 32px; margin-top: 32px">
+    <h1 class="mb-2">Minhas Encomendas</h1>
+    <h2 id="title"></h2>
+    <!-- Botões Compras/Vendas -->
+    <div class="text-right mb-2">
+        <button id="compras-btn" class="btn btn-dark mr-2">Compras</button>
+        <button id="vendas-btn" class="btn btn-dark">Vendas</button>
+        <button id="limpar-btn" class="btn btn-dark">Limpar Filtros</button>
+    </div>
+    <!-- Dropdown para selecionar o estado, compras-->
+    <select class="form-control mb-2" id="estadoSelect" name="estadoSelect">
+        <option value="" selected>Todos os Estados</option>
+        <option value="Pendente">Pendente</option>
+        <option value="Concluída">Concluída</option>
+    </select>
+    <!-- Dropdown para selecionar o fornecedor -->
+    <select class="form-control mb-2" id="fornecedorSelect" name="fornecedorSelect">
+        <option value="">Todos os Fornecedores</option>
+        {% for fornecedor in fornecedores %}
+            <option value="{{ fornecedor.0 }}">{{ fornecedor.1 }}</option>
+        {% endfor %}
+    </select>
+    <!-- Dropdown para selecionar o estado, vendas-->
+    <select class="form-control mb-2" id="estadoSelect2" name="estadoSelect2">
+        <option value="" selected>Todos os Estados</option>
+        <option value="Pendente">Pendente</option>
+        <option value="Concluída">Concluída</option>
+    </select>
+    <!-- Dropdown para selecionar o cliente -->
+    <select class="form-control mb-2" id="clienteSelect" name="clienteSelect">
+        <option value="">Filtrar Clientes</option>
+        {% for cliente in clientes %}
+            <option value="{{ cliente.0 }}">{{ cliente.1 }}</option>
+        {% endfor %}
+        <option value="">Todos os Clientes</option>
+    </select>
+    <!-- Container for Compras -->
+    <div id="comprasContainer">
+        <!-- Tabela para exibir os perfis - Compras -->
+        <table style="margin-top:32px" class="table table-bordered table-striped text-center" id="perfilTable"> <!-- Adicionando classe mx-auto para centralizar -->
+            <thead class="text-center table-dark">
+                <tr>
+                    <th style="width: 10%;">Encomenda</th>
+                    <th style="width: 18%;">Estado</th>
+                    <th style="width: 18%;">Data</th>
+                    <th style="width: 18%;">Utilizador</th>
+                    <th style="width: 18%;">Fornecedor</th>
+                    <th style="width: 18%;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for element in compras %}
+                    <tr>
+                        <td>{{ element.0 }}</td>
+                        <td>{{ element.1 }}</td>
+                        <td>{{ element.2 }}</td>
+                        <td>{{ element.3 }}</td>
+                        <td>{{ element.4 }}</td>
+                        <td>
+                            <a class="text-decoration-none" href="{% url 'ver_encomendacompra' element.0%}">
+                            <button type="button" class="btn btn-dark btn-sm" style="width: 70px;" data-toggle="modal" >Ver</button></a>
+                            {% if element.1 == "Pendente" %}
+                                <a href="{% url 'delete_minhasencomendascompra' element.0 %}" class="text-decoration-none">
+                                    <button type="button" class="btn btn-danger btn-sm" style="width: 70px;">Eliminar</button>
+                                </a>                             
+                            {% endif %}
+                        </td>
+                    </tr>
+    
+                {% empty %}
+                    <tr>
+                        <td colspan="12">Nenhuma encomenda de compra disponível</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Container for Vendas (hidden by default) -->
+    <div id="vendasContainer" style="display: none;">
+        <table style="margin-top:32px" class="table table-bordered table-striped text-center" id="perfilTable"> <!-- Adicionando classe mx-auto para centralizar -->
+        <!-- Tabela para exibir os perfis - Vendas -->
+        <thead class="text-center table-dark">
+            <tr>
+                <th style="width: 10%;">Encomenda</th>
+                <th style="width: 18%;">Estado</th>
+                <th style="width: 18%;">Data</th>
+                <th style="width: 18%;">Utilizador</th>
+                <th style="width: 18%;">Cliente</th>
+                <th style="width: 18%;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for element in vendas %}
+                <tr>
+                    <td>{{ element.0 }}</td>
+                    <td>{{ element.1 }}</td>
+                    <td>{{ element.2 }}</td>
+                    <td>{{ element.3 }}</td>
+                    <td>{{ element.4 }}</td>
+                    <td>
+                        <a class="text-decoration-none" href="{% url 'ver_encomendavenda' element.0%}"><button type="button" class="btn btn-dark btn-sm" style="width: 70px;" data-toggle="modal">Ver</button></a>
+                        {% if element.1 == "Pendente" %}
+                        <a href="{% url 'delete_minhasencomendasvenda' element.0 %}" class="text-decoration-none">
+                            <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" style="width: 70px;" data-target="#confirmDelete{{ element.0 }}">Eliminar</button>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="12">Nenhuma encomenda de venda disponível</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+{% if erro %}
+    <div class="modal" tabindex="-1" role="dialog" id="errorModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Error</h5>
+                    <button type="button" class="close text-danger" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    </div>
+                    <div class="modal-body">
+                        {% if "violates foreign key constraint" in erro %}
+                            Can't delete this table since it's being used in another process!
+                        {% else %}
+                            {{ erro }}
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function(){
+        $('#errorModal').modal('show');
+        });
+    </script>
+    {% endif %}
+
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.6.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+<script>
+    $(document).ready(function () {
+        // Captura o clique no botão "Compras"
+        var urlParams = new URLSearchParams(window.location.search);
+        var estadoValue = urlParams.get('estado');
+        var fornecedorValue = urlParams.get('fornecedor');
+        var estadoValue2 = urlParams.get('estado2');
+        var clienteValue = urlParams.get('cliente');
+
+        if(estadoValue2 || clienteValue) {
+            showVendasContainer()
+        } else {
+            showComprasContainer()
+        }
+
+        // Set dropdown values on page load
+        setDropdownValues();
+
+        // Associe as funções aos botões correspondentes
+        $('#compras-btn').on('click', showComprasContainer);
+        $('#vendas-btn').on('click', showVendasContainer);
+        $('#limpar-btn').on('click', limparFiltros);
+
+
+        $('#estadoSelect, #fornecedorSelect, #estadoSelect2, #clienteSelect').on('change', function () {
+            $('#estadoSelect').prop('disabled', true);
+            $('#fornecedorSelect').prop('disabled', true);
+            $('#estadoSelect2').prop('disabled', true);
+            $('#clienteSelect').prop('disabled', true);
+
+            // Salvar os valores selecionados na local storage
+            localStorage.setItem('estadoSelect', $('#estadoSelect').val() || "");
+            localStorage.setItem('fornecedorSelect', $('#fornecedorSelect').val());
+            localStorage.setItem('estadoSelect2', $('estadoSelect2').val() || "");
+            localStorage.setItem('clienteSelect', $('#clienteSelect').val());
+
+            // Recarregar a página com os valores selecionados
+            var url = '{% url "minhasencomendas" %}?';
+            url += 'estado=' + $('#estadoSelect').val();
+            url += '&fornecedor=' + $('#fornecedorSelect').val();
+            url += '&estado2=' + $('#estadoSelect2').val();
+            url += '&cliente=' + $('#clienteSelect').val();
+            window.location.href = url;
+        });
+
+        function showComprasContainer() {
+            $('#estadoSelect2, #clienteSelect').val('');
+            $('#estadoSelect').prop('disabled', false);
+            $('#fornecedorSelect').prop('disabled', false);
+            $('#comprasContainer').show();
+            $('#estadoSelect').show();
+            $('#fornecedorSelect').show();
+            $('#vendasContainer').hide();
+            $('#estadoSelect2').hide();
+            $('#clienteSelect').hide();
+            $('#title').text("Compras");
+        }
+
+        function showVendasContainer() {
+            $('#estadoSelect, #fornecedorSelect').val('');
+            $('#estadoSelect2').prop('disabled', false);
+            $('#clienteSelect').prop('disabled', false);
+            $('#comprasContainer').hide();
+            $('#estadoSelect').hide();
+            $('#fornecedorSelect').hide();
+            $('#vendasContainer').show();
+            $('#estadoSelect2').show();
+            $('#clienteSelect').show();
+            $('#title').text("Vendas");
+        }
+
+        function limparFiltros() {
+            $('#estadoSelect, #fornecedorSelect, #estadoSelect2, #clienteSelect').val('');
+
+            // Limpar os valores armazenados na localStorage
+            localStorage.removeItem('estadoSelect');
+            localStorage.removeItem('fornecedorSelect');
+            localStorage.removeItem('estadoSelect2');
+            localStorage.removeItem('clienteSelect');
+
+            // Recarregar a página sem filtros
+            var url = '{% url "minhasencomendas" %}';
+            window.location.href = url;
+        }
+
+        // Function to set dropdown values from local storage
+        function setDropdownValues() {
+            var estadoValue = localStorage.getItem('estadoSelect');
+            var fornecedorValue = localStorage.getItem('fornecedorSelect');
+            var estadoValue2 = localStorage.getItem('estadoSelect2');
+            var clienteValue = localStorage.getItem('clienteSelect');
+
+            $('#estadoSelect').val(estadoValue);
+            $('#fornecedorSelect').val(fornecedorValue);
+            $('#estadoSelect2').val(estadoValue2);
+            $('#clienteSelect').val(clienteValue);
+        }
+    });
+</script>
+</body>
+</html>

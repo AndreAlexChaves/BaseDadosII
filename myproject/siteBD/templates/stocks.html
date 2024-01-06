@@ -1,0 +1,289 @@
+<!DOCTYPE html> 
+<html lang="pt">
+<head>
+    <title>Stocks</title>
+    <!-- Bootstrap CSS -->
+    <style>
+        .container {
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    
+{% include 'navbar.html' %}
+
+<!-- Conteúdo da página -->
+<div style="margin-left: 32px; margin-right: 32px; margin-top: 32px">
+    <h1 class="mb-2">Stocks</h1>
+    <h2 id="title"></h2>
+    <div  class="mb-2 text-center">
+        <button id="equipamentos-btn" class="btn btn-dark mr-2 mb-2">Equipamentos</button>
+        <button id="componentes-btn" class="btn btn-dark mb-2">Componentes</button>
+        <button id="limpar-btn" class="btn btn-dark ml-2 mb-2">Limpar Filtros</button>
+    </div>
+    <div>
+        
+        <!-- Dropdown para selecionar o armazém componentes-->
+        <select class="form-control mb-2" id="armazemSelect" name="armazemSelect">
+            <option value="">Filtrar Armazém</option>
+            {% for armazem in armazens %}
+                <option value="{{ armazem.0 }}">{{ armazem.1 }}</option>
+            {% endfor %}
+            <option value="">Todos os Armazéns</option>
+        </select>
+        <!-- Dropdown para selecionar o fornecedor -->
+        <select class="form-control mb-2" id="fornecedorSelect" name="fornecedorSelect">
+            <option value="">Filtrar Fornecedor</option>
+            {% for fornecedor in fornecedores %}
+                <option value="{{ fornecedor.0 }}">{{ fornecedor.1 }}</option>
+            {% endfor %}
+            <option value="">Todos os Fornecedores</option>
+        </select>
+        <!-- Dropdown para selecionar o nome -->
+        <select class="form-control" id="nomeSelect" name="nomeSelect">
+            <option value="">Filtrar Nome</option>
+            {% for nome in nomes %}
+                <option value="{{ nome.0 }}">{{ nome.2 }}</option>
+            {% endfor %}
+            <option value="">Todos os Nomes</option>
+        </select>
+    </div>
+
+    <!-- Dropdown para selecionar o armazém equipamentos-->
+    <select class="form-control" id="armazemSelect2" name="armazemSelect2">
+        <option value="">Filtrar Armazém</option>
+        {% for armazem2 in armazens2 %}
+            <option value="{{ armazem2.0 }}">{{ armazem2.1 }}</option>
+        {% endfor %}
+        <option value="">Todos os Armazéns</option>
+    </select>
+
+    <!-- Dropdown para selecionar o tipo -->
+    <select class="form-control mt-2" id="tipoSelect" name="tipoSelect">
+        <option value="">Filtrar Tipo</option>
+        {% for tipo in tipos %}
+            <option value="{{ tipo.1 }}">{{ tipo.1 }}</option>
+        {% endfor %}
+        <option value="">Todos os Tipos</option>
+    </select>
+
+    <!-- Para o preço-->
+    <div class="row mt-2">
+        <div class="col-6" id="precoMinimoContainer">
+            <input type="number" class="form-control" id="precoMinimo" name="precoMinimo" placeholder="Preço Mínimo:">
+        </div>
+        <div class="col-6" id="precoMaximoContainer">
+            <input type="number" class="form-control" id="precoMaximo" name="precoMaximo" placeholder="Preço Máximo:">
+        </div>
+    </div>
+    <!-- Container for componentes -->
+    <div id="componentesContainer">
+        <!-- Tabela para exibir os perfis - Compras -->
+        <table style="margin-top:32px" class="table table-bordered table-striped text-center" id="perfilTable"> <!-- Adicionando classe mx-auto para centralizar -->
+            <thead class="text-center table-dark">
+                <tr>
+                    <th style="width: 18%;">Nome</th>
+                    <th style="width: 18%;">Fornecedor</th>
+                    <th style="width: 18%;">Armazém</th>
+                    <th style="width: 18%;">Stock</th>
+                    <th style="width: 10%;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for element in componentes %}
+                    <tr>
+                        <td>{{ element.3 }}</td>
+                        <td>{{ element.5 }}</td>
+                        <td>{{ element.1 }}</td>
+                        <td>{{ element.8 }} qt</td>
+                        <td>
+                            <a href="{% url 'encomendaComponentes' %}">
+                                <button type="button" class="btn btn-dark btn-sm w-75" data-toggle="modal" >Encomendar</button>
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="12">Sem componentes. <a href="{% url 'encomendaComponentes' %}" class="text-decoration-none text-primary">Encomendar</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Container for Vendas (hidden by default) -->
+    <div id="equipamentosContainer" style="display: none;">
+        <table style="margin-top:32px" class="table table-bordered table-striped text-center" id="perfilTable"> <!-- Adicionando classe mx-auto para centralizar -->
+        <!-- Tabela para exibir os perfis - Vendas -->
+        <thead class="text-center table-dark">
+            <tr>
+                <th style="width: 20%;">Equipamento</th>
+                <th style="width: 16%;">Tipo</th>
+                <th style="width: 16%;">Preço</th>
+                <th style="width: 16%;">Armazém</th>
+                <th style="width: 16%;">Stock</th>
+                <th style="width: 10%;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for element in equipamentos %}
+                <tr>
+                    <td>{{ element.3 }}</td>
+                    <td>{{ element.6 }}</td>
+                    <td>{{ element.5 }}€</td>
+                    <td>{{ element.1 }}</td>
+                    <td>{{ element.9 }} qt</td>
+                    <td>
+                        <a href="{% url 'nova_ficha_producao' element.2 element.3 %}">
+                            <button type="button" class="btn btn-dark btn-sm w-75" data-toggle="modal">Produzir</button>
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="12">Sem equipamentos. <a href="{% url 'list_equipamentos' %}" class="text-decoration-none text-primary">Produzir</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+<!-- Adicione essas linhas ao head do seu HTML -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.6.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+<script>
+    $(document).ready(function () {
+        var urlParams = new URLSearchParams(window.location.search);
+        var armazemValue = urlParams.get('armazem');
+        var nomeValue = urlParams.get('nome');
+        var fornecedorValue = urlParams.get('fornecedor');
+        var armazemValue2 = urlParams.get('armazem2');
+        var tipoValue = urlParams.get('tipo');
+        var precoMinimo = urlParams.get('precoMinimo');
+        var precoMaximo = urlParams.get('precoMaximo');
+        //console.log(tipoValue);
+        if (armazemValue2 || tipoValue || precoMinimo || precoMaximo) {
+            showEquipamentosContainer()
+        } else {
+            showComponentesContainer()
+        }
+
+        // Set dropdown values on page load
+        setDropdownValues();
+
+        // Associe as funções aos botões correspondentes
+        $('#componentes-btn').on('click', showComponentesContainer);
+        $('#equipamentos-btn').on('click', showEquipamentosContainer);
+        $('#limpar-btn').on('click', limparFiltros);
+
+        // Adicionando um evento para atualizar a página quando a dropdown do armazém for alterada
+        $('#armazemSelect, #fornecedorSelect, #nomeSelect, #armazemSelect2, #tipoSelect, #precoMinimo, #precoMaximo').on('change', function () {
+            $('#armazemSelect').prop('disabled', true);
+            $('#fornecedorSelect').prop('disabled', true);
+            $('#nomeSelect').prop('disabled', true);
+            $('#armazemSelect2').prop('disabled', true);
+            $('#tipoSelect').prop('disabled', true);
+            $('#precoMinimo').prop('disabled', true);
+            $('#precoMaximo').prop('disabled', true);
+
+            // Salvar os valores selecionados na local storage
+            localStorage.setItem('armazemSelect', $('#armazemSelect').val());
+            localStorage.setItem('fornecedorSelect', $('#fornecedorSelect').val());
+            localStorage.setItem('nomeSelect', $('#nomeSelect').val());
+            localStorage.setItem('armazemSelect2', $('#armazemSelect2').val());
+            localStorage.setItem('tipoSelect', $('#tipoSelect').val());
+            localStorage.setItem('precoMinimo', $('#precoMinimo').val());
+            localStorage.setItem('precoMaximo', $('#precoMaximo').val());
+
+            // Recarregar a página com os valores selecionados
+            var url = '{% url "ver_stocks" %}?';
+            url += 'armazem=' + $('#armazemSelect').val();
+            url += '&fornecedor=' + $('#fornecedorSelect').val();
+            url += '&nome=' + $('#nomeSelect').val();
+            url += '&armazem2=' + $('#armazemSelect2').val();
+            url += '&tipo=' + $('#tipoSelect').val();
+            url += '&precoMinimo=' + $('#precoMinimo').val();
+            url += '&precoMaximo=' + $('#precoMaximo').val();
+            window.location.href = url;
+        });
+
+        // Função para mostrar o container de componentes e esconder o de equipamentos
+        function showComponentesContainer() {
+            $('#armazemSelect2, #tipoSelect').val('');
+            $('#armazemSelect').prop('disabled', false);
+            $('#fornecedorSelect').prop('disabled', false);
+            $('#nomeSelect').prop('disabled', false);
+            $('#componentesContainer').show();
+            $('#armazemSelect').show();
+            $('#fornecedorSelect').show();
+            $('#nomeSelect').show();
+            $('#equipamentosContainer').hide();
+            $('#armazemSelect2').hide();
+            $('#tipoSelect').hide();
+            $('#precoMinimoContainer').hide();
+            $('#precoMaximoContainer').hide();
+            $('#title').text("Componentes");
+        }
+
+        // Função para mostrar o container de equipamentos e esconder o de componentes
+        function showEquipamentosContainer() {
+            $('#armazemSelect, #fornecedorSelect, #nomeSelect').val('');
+            $('#armazemSelect2').prop('disabled', false);
+            $('#tipoSelect').prop('disabled', false);
+            $('#precoMinimoContainer').prop('disabled', false);
+            $('#precoMaximoContainer').prop('disabled', false);
+            $('#componentesContainer').hide();
+            $('#armazemSelect').hide();
+            $('#fornecedorSelect').hide();
+            $('#nomeSelect').hide();
+            $('#equipamentosContainer').show();
+            $('#armazemSelect2').show();
+            $('#tipoSelect').show();
+            $('#precoMinimoContainer').show();
+            $('#precoMaximoContainer').show();
+            $('#title').text("Equipamentos");
+        }
+
+        function limparFiltros() {
+            $('#armazemSelect, #fornecedorSelect, #nomeSelect, #armazemSelect2, #tipoSelect, #precoMinimo, #precoMaximo').val('');
+
+            // Limpar os valores armazenados na localStorage
+            localStorage.removeItem('armazemSelect');
+            localStorage.removeItem('fornecedorSelect');
+            localStorage.removeItem('nomeSelect');
+            localStorage.removeItem('armazemSelect2');
+            localStorage.removeItem('tipoSelect');
+            localStorage.removeItem('precoMinimo');
+            localStorage.removeItem('precoMaximo');
+
+            // Recarregar a página sem filtros
+            var url = '{% url "ver_stocks" %}';
+            window.location.href = url;
+        }
+
+        // Function to set dropdown values from local storage
+        function setDropdownValues() {
+            var armazemValue = localStorage.getItem('armazemSelect');
+            var fornecedorValue = localStorage.getItem('fornecedorSelect');
+            var nomeValue = localStorage.getItem('nomeSelect');
+            var armazemValue2 = localStorage.getItem('armazemSelect2');
+            var tipoValue = localStorage.getItem('tipoSelect');
+            var precoMinimo = localStorage.getItem('precoMinimo');
+            var precoMaximo = localStorage.getItem('precoMaximo');
+
+            $('#armazemSelect').val(armazemValue);
+            $('#fornecedorSelect').val(fornecedorValue);
+            $('#nomeSelect').val(nomeValue);
+            $('#armazemSelect2').val(armazemValue2);
+            $('#tipoSelect').val(tipoValue);
+            $('#precoMinimo').val(precoMinimo);
+            $('#precoMaximo').val(precoMaximo);
+        }
+    });
+</script>
+
+</body>
+</html>

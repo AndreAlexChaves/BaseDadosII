@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <title>Equipamentos</title>
+    <!-- Bootstrap CSS -->
+    <style>
+        .container {
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    
+{% include 'navbar.html' %}
+
+<div style="margin-left: 32px; margin-right: 32px; margin-top: 32px">
+    <div class="row sticky-top bg-white p-1">
+        <div class="col-10">
+            <div class="search-bar border"> 
+                <span class="search-icon"><i class="fi fi-rr-search"></i></span>
+                <input class="w-100" type="text" id="searchInput" placeholder="Pesquisar produto...">
+            </div>      
+        </div>
+        {% if request.session.perms == 2 %}
+        <div class="col-2">
+            <button type="button" class="btn btn-dark w-100 h-100" onclick="window.location.href='/equipamentos/criar'">
+                Novo equipamento
+            </button>            
+        </div>
+        {% endif %}
+    </div>
+
+<!-- Tabela para exibir os perfis -->
+<h1 class="mt-3">Equipamentos</h1>
+<div class="row" style="margin-top: 32px; margin-bottom: 32px;">
+    
+    <div class="col-2">
+        <a href="{% url 'list_equipamentos' %}">
+            <button type="button"  class="btn btn-dark w-100 mb-3" onclick="desleciona()">Limpar filtros</button>
+        </a>
+        <h5>Preço</h5>
+        <label for="chckbx1">0€-50€</label>
+        <input type="checkbox" class="checkbox-group-preco" id="chckbx1" name="preco" value="0-50"> <br>
+        
+        <label for="chckbx2">50€-150€</label>
+        <input type="checkbox" class="checkbox-group-preco" id="chckbx2" name="preco" value="50-150"> <br>
+        
+        <label for="chckbx3">150€-500€</label>
+        <input type="checkbox" class="checkbox-group-preco" id="chckbx3" name="preco" value="150-500"> <br>
+        
+        <label for="chckbx4">>500€</label>
+        <input type="checkbox" class="checkbox-group-preco" id="chckbx4" name="preco" value="500"> <br> <br>
+        
+        <h5>Tipo</h5>
+        {% for element in tipos %}
+            <label for="chckbx{{ forloop.counter }}">{{ element.1 }}</label>
+            <input type="checkbox" class="checkbox-group-tipo" id="chckb{{ forloop.counter }}" name="tipo" data-nome="{{ element.1 }}"> <br>
+        {% empty %}
+            <p>Nenhum equipamento disponível</p>
+        {% endfor %}
+        
+
+    </div>
+    <div class="col-10">
+        <div class="row">
+            {% for element in data %}
+                <div class="col-md-6">
+                    <a style="color: black !important; text-decoration: none !important;" href="{% url 'ver_equipamento' p_id_equip=element.0 %}">
+                        <div class="card mb-3">
+                            <div class="card-header bg-dark text-white text-center d-flex justify-content-between align-items-center">
+                                <h5 class="card-title text-white">{{ element.1 }}</h5>
+                                {% if request.session.perms == 2 %}
+
+                                <div class="d-flex">
+                                    <a href="{% url 'editar_equipamento' element.0%}">
+                                        <button type="button" class="btn btn-light btn-sm mr-2" style="width: 70px;">Editar</button>
+                                    </a>
+                                    <a href="{% url 'delete_equipamento' element.0%}">
+                                        <button type="button" class="btn btn-danger btn-sm" style="width: 70px;">Apagar</button>
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item bg-light">{{ element.2 }}</li>
+                                <li class="list-group-item bg-light">{{element.4}}</li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                                    {{ element.3 }}€ 
+                                    {% if request.session.perms == 2 %}
+                                    <a href="{% url 'nova_ficha_producao' element.0 element.1 %}">
+                                        <button type="button" class="btn btn-dark btn-sm" style="width: 150px;">Produzir</button>
+                                    </a>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </div>
+                    </a>
+                </div>
+                {% if forloop.counter|divisibleby:2 %}
+                </div><div class="row">
+                {% endif %}
+            {% empty %}
+                <p>Nenhum equipamento disponível</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+    {% if erro %}
+    <div class="modal" tabindex="-1" role="dialog" id="errorModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Error</h5>
+                    <button type="button" class="close text-danger" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    </div>
+                    <div class="modal-errorModal">
+                        {% if "violates foreign key constraint" in erro %}
+                                Não pode apagar este equipamento!
+                        {% else %}
+                            {{ erro }}
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function(){
+        $('#errorModal').modal('show');
+        });
+    </script>
+    {% endif %}
+<script>
+    $(document).ready(function () {
+        // Captura o evento de digitar no campo de pesquisa
+        $('#searchInput').on('keyup', function () {
+            // Obtém o valor digitado
+            var searchText = $(this).val().toLowerCase();
+
+            // Filtra as linhas da tabela com base no valor digitado
+            $('.card').filter(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(searchText) > -1);
+            });
+        });
+    });
+
+    function getSelectedTipo() {
+        var checkboxesTipo = document.querySelectorAll('.checkbox-group-tipo');
+        var selectedTipo = null;
+
+        checkboxesTipo.forEach(function (checkboxTipo) {
+            if (checkboxTipo.checked) {
+                selectedTipo = checkboxTipo.dataset.nome;
+            }
+        });
+
+        return selectedTipo;}
+
+      
+        function desleciona() {
+            const chckbox1 = document.getElementById('chckbx1');
+            const chckbox2 = document.getElementById('chckbx2');
+            const chckbox3 = document.getElementById('chckbx3');
+            const chckbox4 = document.getElementById('chckbx4');
+            const checkboxesTipo = document.querySelectorAll('.checkbox-group-tipo');
+            localStorage.removeItem('chckbox1', chckbox1.checked);
+            localStorage.removeItem('chckbox2', chckbox2.checked);
+            localStorage.removeItem('chckbox3', chckbox3.checked);
+            localStorage.removeItem('chckbox4', chckbox4.checked);
+
+            // Remover o estado das checkboxes de tipo
+            checkboxesTipo.forEach(function (checkboxTipo) {
+                var tipo = checkboxTipo.dataset.nome;
+                localStorage.removeItem('checkbox_' + tipo);
+            });
+        }
+
+        
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const chckbox1 = document.getElementById('chckbx1');
+            const chckbox2 = document.getElementById('chckbx2');
+            const chckbox3 = document.getElementById('chckbx3');
+            const chckbox4 = document.getElementById('chckbx4');
+
+            function checkAndSetCheckboxState() {
+                const checkedState1 = localStorage.getItem('chckbox1');
+                const checkedState2 = localStorage.getItem('chckbox2');
+                const checkedState3 = localStorage.getItem('chckbox3');
+                const checkedState4 = localStorage.getItem('chckbox4');
+
+                chckbox1.checked = checkedState1 === 'true';
+                chckbox2.checked = checkedState2 === 'true';
+                chckbox3.checked = checkedState3 === 'true';
+                chckbox4.checked = checkedState4 === 'true';
+            }
+
+            $(document).ready(function () {
+    $('.checkbox-group-tipo').change(function () {
+        tipo = $(this).data('nome');
+        localStorage.setItem('checkbox_' + tipo, this.checked);
+
+        $('.checkbox-group-tipo').not(this).each(function () {
+            var outroTipo = $(this).data('nome');
+            localStorage.removeItem('checkbox_' + outroTipo);
+        });
+        console.log(tipo)
+    });
+
+    $('.checkbox-group-tipo').each(function () {
+        tipo = $(this).data('nome');
+        var estadoSalvo = localStorage.getItem('checkbox_' + tipo);
+        if (estadoSalvo !== null) {
+            $(this).prop('checked', estadoSalvo === 'true');
+        }
+    });
+
+    checkAndSetCheckboxState(); // Mova essa linha aqui
+});
+
+        chckbox1.addEventListener('change', function () {
+            localStorage.setItem('chckbox1', chckbox1.checked);
+            localStorage.removeItem('chckbox2', chckbox2.checked);
+            localStorage.removeItem('chckbox3', chckbox3.checked);
+            localStorage.removeItem('chckbox4', chckbox4.checked);
+            var selectedTipo = getSelectedTipo();
+            if (chckbox1.checked) {
+                if(selectedTipo){
+                    console.log("cu")
+                    var url = '/equipamentos/filtrar/0/50';
+                    var novaURL = url + '/' + selectedTipo;
+                    window.location.href = novaURL;
+                }
+                else
+                window.location.href = `{% url 'filtrar_equip' 0 50 %}`;
+            }
+        });
+
+        chckbox2.addEventListener('change', function () {
+            localStorage.setItem('chckbox2', chckbox2.checked);
+            localStorage.removeItem('chckbox1', chckbox1.checked);
+            localStorage.removeItem('chckbox3', chckbox3.checked);
+            localStorage.removeItem('chckbox4', chckbox4.checked);
+            var selectedTipo = getSelectedTipo();
+
+            if (chckbox2.checked) {
+                if(selectedTipo){
+                    var url = '/equipamentos/filtrar/50/150';
+                    var novaURL = url + '/' + selectedTipo;
+                    window.location.href = novaURL;
+                }
+                else
+                window.location.href = `{% url 'filtrar_equip' 50 150 %}`;
+            }
+        });
+
+        chckbox3.addEventListener('change', function () {
+            localStorage.setItem('chckbox3', chckbox3.checked);
+            localStorage.removeItem('chckbox2', chckbox2.checked);
+            localStorage.removeItem('chckbox1', chckbox1.checked);
+            localStorage.removeItem('chckbox4', chckbox4.checked);
+            var selectedTipo = getSelectedTipo();
+
+
+            if (chckbox3.checked) {
+                if(selectedTipo){
+                    var url = '/equipamentos/filtrar/150/500';
+                    var novaURL = url + '/' + selectedTipo;
+                    window.location.href = novaURL;
+                }
+                else
+                window.location.href = `{% url 'filtrar_equip' 150 500 %}`;
+            }
+        });
+
+        chckbox4.addEventListener('change', function () {
+            localStorage.setItem('chckbox4', chckbox4.checked);
+            localStorage.removeItem('chckbox2', chckbox2.checked);
+            localStorage.removeItem('chckbox3', chckbox3.checked);
+            localStorage.removeItem('chckbox1', chckbox1.checked);
+            var selectedTipo = getSelectedTipo();
+
+            if (chckbox4.checked) {
+                if(selectedTipo){
+                    var url = '/equipamentos/filtrar/500/1000000000';
+                    var novaURL = url + '/' + selectedTipo;
+                    window.location.href = novaURL;
+                }
+                else
+                window.location.href = `{% url 'filtrar_equip' 500 1000000000 %}`;
+            }
+        });
+
+            $(document).ready(function () {
+            $('.checkbox-group-tipo').change(function () {
+                tipo = $(this).data('nome');
+
+                localStorage.setItem('checkbox_' + tipo, this.checked);
+
+                $('.checkbox-group-tipo').not(this).each(function () {
+                    var outroTipo = $(this).data('nome');
+                    localStorage.removeItem('checkbox_' + outroTipo);
+                });
+                
+                if (this.checked) {
+                const checkedState1 = localStorage.getItem('chckbox1');
+                const checkedState2 = localStorage.getItem('chckbox2');
+                const checkedState3 = localStorage.getItem('chckbox3');
+                const checkedState4 = localStorage.getItem('chckbox4');
+                if (checkedState1 === 'true') {
+                    var preco1 = 0
+                    var preco2 = 50
+                    var url = '/equipamentos/filtrar/';
+                    var novaURL = url + preco1 + '/' + preco2 + '/' + tipo;
+                    window.location.href = novaURL;
+                } else if (checkedState2 === 'true') {
+                    var preco1 = 50
+                    var preco2 = 150
+                    var url = '/equipamentos/filtrar/';
+                    var novaURL = url + preco1 + '/' + preco2 + '/' + tipo;
+                    window.location.href = novaURL;
+                } else if (checkedState3 === 'true') {
+                    var preco1 = 150
+                    var preco2 = 500
+                    var url = '/equipamentos/filtrar/';
+                    var novaURL = url + preco1 + '/' + preco2 + '/' + tipo;
+                    window.location.href = novaURL;
+                } else if (checkedState4 === 'true') {
+                    var preco1 = 500
+                    var preco2 = 100000000000000
+                    var url = '/equipamentos/filtrar/';
+                    var novaURL = url + preco1 + '/' + preco2 + '/' + tipo;
+                    window.location.href = novaURL;
+                } else {
+                    var url = '/equipamentos/filtrar/';
+                    var novaURL = url + tipo;
+                    window.location.href = novaURL;
+                }
+            }
+
+                    
+            });
+            $('.checkbox-group-tipo').each(function () {
+                tipo = $(this).data('nome');
+                var estadoSalvo = localStorage.getItem('checkbox_' + tipo);
+                if (estadoSalvo !== null) {
+                    $(this).prop('checked', estadoSalvo === 'true');
+                }
+            });
+            
+        });
+    });
+
+     /*document.addEventListener("DOMContentLoaded", function () {
+    const checkboxesPreco = document.querySelectorAll('.checkbox-group-preco');
+    const checkboxesTipo = document.querySelectorAll('.checkbox-group-tipo'); 
+
+    const chckbox1 = document.getElementById('chckbx1');
+    const chckbox2 = document.getElementById('chckbx2');
+    const chckbox3 = document.getElementById('chckbx3');
+    const chckbox4 = document.getElementById('chckbx4');
+
+   function checkSelectedCheckboxes() {
+        const precoSelecionado = Array.from(checkboxesPreco).some(checkbox => checkbox.checked);
+        const tipoSelecionado = Array.from(checkboxesTipo).some(checkbox => checkbox.checked);
+
+        var preco1 = 0;
+        var preco2 = 0;
+        var tipo = "";
+
+        if (precoSelecionado && tipoSelecionado) {
+            if (chckbox1.checked) {
+                preco1 = 0;
+                preco2 = 50;
+            }
+            if (chckbox2.checked) {
+                preco1 = 50;
+                preco2 = 150;
+            }
+            if (chckbox3.checked) {
+                preco1 = 150;
+                preco2 = 500;
+            }
+            if (chckbox4.checked) {
+                preco1 = 500;
+                preco2 = 1000000000000;
+            }
+
+              $(document).ready(function () {
+            $('.checkbox-group-tipo').change(function () {
+                tipo = $(this).data('nome');
+
+                localStorage.setItem('checkbox_' + tipo, this.checked);
+
+                $('.checkbox-group-tipo').not(this).each(function () {
+                    var outroTipo = $(this).data('nome');
+                    localStorage.removeItem('checkbox_' + outroTipo);
+                });
+
+                if (this.checked) {
+                    var url = '/equipamentos/filtrar/';
+                    var novaURL = url + tipo;
+
+                    window.location.href = novaURL;
+                }
+            });
+
+            $('.checkbox-group-tipo').each(function () {
+                tipo = $(this).data('nome');
+                var estadoSalvo = localStorage.getItem('checkbox_' + tipo);
+                if (estadoSalvo !== null) {
+                    $(this).prop('checked', estadoSalvo === 'true');
+                }
+            });
+        });
+
+            checkboxesTipo.forEach(function (checkbox) {
+                tipo = $(checkbox).attr('data-nome');
+                var estadoSalvo = localStorage.getItem('checkbox_' + tipo);
+                if (estadoSalvo !== null) {
+                    checkbox.checked = estadoSalvo === 'true';
+                }
+            });
+
+            var url = '/equipamentos/filtrar/';
+            var novaURL = url + preco1 + '/' + preco2 + '/' + tipo;
+            window.location.href = novaURL;
+        }
+    }
+
+    checkboxesPreco.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            checkSelectedCheckboxes();
+        });
+    });
+
+    checkboxesTipo.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            checkSelectedCheckboxes();
+        });
+    });
+});*/
+
+</script>
+</body>
+</html>
