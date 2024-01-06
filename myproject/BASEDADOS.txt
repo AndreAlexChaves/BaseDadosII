@@ -899,7 +899,7 @@ $$ LANGUAGE plpgsql;
 
 -- Criação do Procedimento Armazenado para Atualizar um Equipamento na Guia de Remessa de Venda
 CREATE OR REPLACE PROCEDURE sp_Equipamentos_Guia_Remessa_Venda_UPDATE (
-    IN p_ID_Equipamento_Guia_Remessa_Compra INT,
+    IN p_ID_Equipamento_Guia_Remessa_Venda INT,
     IN p_ID_Remessa_Venda INT,
     IN p_ID_Equipamento INT,
     IN p_Quantidade INT
@@ -911,7 +911,7 @@ BEGIN
         ID_Remessa_Venda = p_ID_Remessa_Venda,
         ID_Equipamento = p_ID_Equipamento,
         Quantidade = p_Quantidade
-    WHERE ID_Equipamento_Guia_Remessa_Compra = p_ID_Equipamento_Guia_Remessa_Compra;
+    WHERE ID_Equipamento_Guia_Remessa_Venda = p_ID_Equipamento_Guia_Remessa_Venda;
     
 END;
 $$ LANGUAGE plpgsql;
@@ -1005,9 +1005,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 	
---CLIENTES--
-	
+--CLIENTES--	
 CREATE OR REPLACE PROCEDURE sp_Clientes_CREATE(
+    IN cliente_id INT,
     IN cliente_nome VARCHAR(255),
     IN cliente_morada VARCHAR(255),
     IN cliente_contacto VARCHAR(20),
@@ -1015,10 +1015,9 @@ CREATE OR REPLACE PROCEDURE sp_Clientes_CREATE(
 )
 LANGUAGE SQL
 AS $$
-INSERT INTO Clientes (Nome, Morada, Contacto, NIF)
-VALUES (cliente_nome, cliente_morada, cliente_contacto, cliente_nif);
+INSERT INTO Clientes (ID_Cliente, Nome, Morada, Contacto, NIF)
+VALUES (cliente_id, cliente_nome, cliente_morada, cliente_contacto, cliente_nif);
 $$;
-	
 	
 CREATE OR REPLACE PROCEDURE sp_Clientes_UPDATE(
     IN cliente_id INT,
@@ -1908,6 +1907,19 @@ JOIN
     Perfil P ON U.ID_Perfil = P.ID_Perfil
 ORDER BY
     U.ID_Utilizador;
+
+CREATE OR REPLACE VIEW Equipamentos_view AS
+SELECT
+    e.ID_Equip,
+    e.Nome,
+    e.Descricao,
+    e.Preco_Venda,
+    t.Tipo AS tipo
+FROM
+    Equipamentos e
+JOIN
+    Tipo_Equipamento t ON e.Tipo_Equipamento = t.ID_Tipo_Equipamento;
+
 
 CREATE OR REPLACE PROCEDURE sp_ficha_producao_create(
     IN p_ID_Equip INT,
