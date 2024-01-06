@@ -52,10 +52,12 @@
                     <td>{{ element.2 }}</td>
                     <td>{{ element.1 }}</td>
                     <td>{{ element.4 }}</td>
+                    {% if request.session.perms == 2 %}
                     <td>
                         <button type="button" class="btn btn-dark btn-sm" style="width: 70px;" data-toggle="modal" data-target="#editarModal{{ element.0 }}">Editar</button>
                         <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" style="width: 70px;" data-target="#confirmDelete{{ element.0 }}">Eliminar</button>
                     </td>
+                    {% endif %}
                 </tr>
 
                 <!-- Modal para confirmação de eliminação -->
