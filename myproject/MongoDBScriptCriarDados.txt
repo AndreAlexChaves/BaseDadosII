@@ -1,0 +1,25 @@
+db.computronix.insert([
+    { id_equip: 1, atributos: { Cor: 'Vermelho', Tamanho: 'Alto' } },
+    { id_equip: 2, atributos: { Cor: 'Azul', Tamanho: 'Baixo' } }
+])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
