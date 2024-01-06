@@ -1034,14 +1034,15 @@ SET Nome = cliente_nome, Morada = cliente_morada, Contacto = cliente_contacto, N
 WHERE ID_Cliente = cliente_id;
 $$;
 
-CREATE OR REPLACE PROCEDURE sp_Clientes_DELETE(
-    IN cliente_id INTCALL sp_Equipamentos_Guia_Remessa_Venda_DELETE(1);
+CREATE OR REPLACE PROCEDURE sp_Clientes_DELETE (
+    IN p_ID_Cliente INT
 )
-LANGUAGE SQL
 AS $$
-DELETE FROM Clientes
-WHERE ID_Cliente = cliente_id;
-$$;
+BEGIN
+    DELETE FROM Clientes
+    WHERE ID_Cliente = p_ID_Cliente;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Função para ler um cliente específico por ID
 CREATE OR REPLACE FUNCTION fn_Clientes_READ(cliente_id INT)
