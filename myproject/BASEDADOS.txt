@@ -228,9 +228,7 @@ BEGIN
     -- Excluir dados na tabela Utilizadores
     DELETE FROM Utilizadores
     WHERE ID_Utilizador = p_ID_Utilizador;
-    
-    -- Pode adicionar mais lógica ou manipulação de dados, se necessário
-    
+        
 END;
 $$ LANGUAGE plpgsql;
 
@@ -919,13 +917,13 @@ $$ LANGUAGE plpgsql;
 
 -- Criação do Procedimento Armazenado para Excluir um Equipamento na Guia de Remessa de Venda
 CREATE OR REPLACE PROCEDURE sp_Equipamentos_Guia_Remessa_Venda_DELETE (
-    IN p_ID_Equipamento_Guia_Remessa_Compra INT
+    IN p_ID_Equipamento_Guia_Remessa_Venda INT
 )
 AS $$
 BEGIN
     -- Excluir dados na tabela Equipamentos_Guia_Remessa_Venda
     DELETE FROM Equipamentos_Guia_Remessa_Venda
-    WHERE ID_Equipamento_Guia_Remessa_Compra = p_ID_Equipamento_Guia_Remessa_Compra;
+    WHERE ID_Equipamento_Guia_Remessa_Venda= p_ID_Equipamento_Guia_Remessa_Venda;
         
 END;
 $$ LANGUAGE plpgsql;
